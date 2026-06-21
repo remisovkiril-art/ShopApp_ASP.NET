@@ -1,0 +1,56 @@
+@ShopApp_HostAddress = http://localhost:5157
+
+GET {{ShopApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+GET https://localhost:7100/api/items
+
+###
+
+GET https://localhost:7100/api/items/1
+
+###
+
+GET https://localhost:7100/api/items/100
+
+###
+
+GET https://localhost:7100/api/items/search?name=Pen
+
+###
+
+GET https://localhost:7100/api/items/search
+
+###
+
+POST https://localhost:7100/api/items
+Content-Type: application/json
+
+{
+    "name": "Phone"
+}
+
+###
+
+GET https://localhost:7100/api/items/4
+
+###
+
+PUT https://localhost:7100/api/items/4
+Content-Type: application/json
+
+{
+    "name": "Phone Pro"
+}
+
+###
+
+GET https://localhost:7100/api/items/4
+
+###
+DELETE https://localhost:7100/api/items/4
+
+###
+
+GET https://localhost:7100/api/items/4

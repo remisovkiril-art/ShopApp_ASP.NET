@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="ShopApp/ShopApp.csproj" />
+  <Project Path="ShopDomain/ShopDomain.csproj" />
+</Solution>
