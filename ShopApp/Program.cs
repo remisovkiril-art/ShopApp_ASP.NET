@@ -13,7 +13,7 @@ namespace ShopApp
             // Add services to the container.
 
             builder.Services.AddControllers();
-            builder.Services.AddScoped<IProductService, ProductService>();
+            builder.Services.AddSingleton<IProductService, ProductService>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
