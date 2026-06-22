@@ -1,34 +1,55 @@
 ﻿//using Microsoft.AspNetCore.Mvc;
 //using ShopDomain.Models;
+//using ShopApp.Interfaces;
 
-//namespace ShopApp.Controllers
+//namespace Shop.App.Controllers;
+
+//// http://localhost:port/api/product
+//[ApiController]
+//[Route("api/[controller]")]
+//public class ProductController(IProductService productService) : ControllerBase
 //{
-//    // http://localhost:port/api/product
-//    [ApiController]
-//    [Route("api/[controller]")]
-//    public class ProductController : ControllerBase
+//    [HttpGet]
+//    public List<Product> GetProducts()
 //    {
-//        private List<Product> _products = new();
+//        return productService.GetAllProducts();
+//    }
 
-//        [HttpGet]
-//        public List<Product> GetProducts()
+//    [HttpGet("{id}")]
+//    public IActionResult GetProductById([FromRoute] int id)
+//    {
+//        var product = new Product()
 //        {
-//            _products.Add(new Product()
-//            {
-//                Title = "Milk",
-//                Price = 40.9f
-//            });
+//            Title = $"Test Product {id}",
+//            Price = 100
+//        };
+//        return Ok(product);
+//    }
 
-//            _products.Add(new Product()
-//            {
-//                Title = "Bread",
-//                Price = 30.5f
-//            });
-
-//            return _products;
-//        }
+//    [HttpPost]
+//    public IActionResult AddNewProduct(Product product)
+//    {
+//        productService.AddProduct(product);
+//        return CreatedAtAction(nameof(GetProductById), new { id = 0 }, product);
 //    }
 //}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
