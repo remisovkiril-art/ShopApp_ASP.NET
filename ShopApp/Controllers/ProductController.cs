@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ShopDomain.Models;
+using Shop.App.Filters;
 using ShopApp.Interfaces;
+using ShopDomain.Models;
 
 namespace Shop.App.Controllers;
 
 // http://localhost:port/api/product
 [ApiController]
 [Route("api/[controller]")]
+[LogActionFilter]
 public class ProductController(IProductService productService) : ControllerBase
 {
     [HttpGet]
