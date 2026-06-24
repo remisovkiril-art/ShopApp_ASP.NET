@@ -1,10 +1,21 @@
-@ShopApp_HostAddress = http://localhost:5157
+POST https://localhost:7100/api/user/register
+Content-Type: application/json
 
-GET {{ShopApp_HostAddress}}/api/product
-Accept: application/json
+{
+  "id": 1,
+  "login": "admin",
+  "hashPassword": "123",
+  "email": "admin@test.com"
+}
 
-GET {{ShopApp_HostAddress}}/api/product/1
-Accept: application/json
+###
 
-GET {{ShopApp_HostAddress}}/api/category
-Accept: application/json
+POST https://localhost:7100/api/user/register
+Content-Type: application/json
+
+{
+  "id": 2,
+  "login": "user",
+  "hashPassword": "123",
+  "email": "user@test.com"
+}

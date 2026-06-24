@@ -1,38 +1,38 @@
-﻿//using Microsoft.AspNetCore.Mvc;
-//using ShopDomain.Models;
-//using ShopApp.Interfaces;
+﻿using Microsoft.AspNetCore.Mvc;
+using ShopDomain.Models;
+using ShopApp.Interfaces;
 
-//namespace Shop.App.Controllers;
+namespace Shop.App.Controllers;
 
-//// http://localhost:port/api/product
-//[ApiController]
-//[Route("api/[controller]")]
-//public class ProductController(IProductService productService) : ControllerBase
-//{
-//    [HttpGet]
-//    public List<Product> GetProducts()
-//    {
-//        return productService.GetAllProducts();
-//    }
+// http://localhost:port/api/product
+[ApiController]
+[Route("api/[controller]")]
+public class ProductController(IProductService productService) : ControllerBase
+{
+    [HttpGet]
+    public List<Product> GetProducts()
+    {
+        return productService.GetAllProducts();
+    }
 
-//    [HttpGet("{id}")]
-//    public IActionResult GetProductById([FromRoute] int id)
-//    {
-//        var product = new Product()
-//        {
-//            Title = $"Test Product {id}",
-//            Price = 100
-//        };
-//        return Ok(product);
-//    }
+    [HttpGet("{id}")]
+    public IActionResult GetProductById([FromRoute] int id)
+    {
+        var product = new Product()
+        {
+            Title = $"Test Product {id}",
+            Price = 100
+        };
+        return Ok(product);
+    }
 
-//    [HttpPost]
-//    public IActionResult AddNewProduct(Product product)
-//    {
-//        productService.AddProduct(product);
-//        return CreatedAtAction(nameof(GetProductById), new { id = 0 }, product);
-//    }
-//}
+    [HttpPost]
+    public IActionResult AddNewProduct(Product product)
+    {
+        productService.AddProduct(product);
+        return CreatedAtAction(nameof(GetProductById), new { id = 0 }, product);
+    }
+}
 
 
 

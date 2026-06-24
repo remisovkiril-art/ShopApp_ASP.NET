@@ -1,9 +1,9 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿//var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+//builder.Services.AddControllers();
 
-var app = builder.Build();
+//var app = builder.Build();
 
-app.MapControllers();
+//app.MapControllers();
 
-app.Run();
+//app.Run();
