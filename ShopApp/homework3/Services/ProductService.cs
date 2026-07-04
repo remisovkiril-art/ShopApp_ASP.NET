@@ -47,6 +47,7 @@ namespace ShopApi.homework3.Services
             _products.Remove(product);
             return true;
         }
+
         public IEnumerable<Product> SearchByName(string name)
         {
             return _products.Where(p => p.Name.ToLower().Contains(name.ToLower()));

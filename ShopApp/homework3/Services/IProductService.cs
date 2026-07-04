@@ -12,3 +12,4 @@ namespace ShopApi.homework3.Services
         IEnumerable<Product> SearchByName(string name);
     }
 }
+
