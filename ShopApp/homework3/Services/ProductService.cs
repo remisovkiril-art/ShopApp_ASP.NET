@@ -4,7 +4,6 @@ namespace ShopApi.homework3.Services
 {
     public class ProductService : IProductService
     {
-        // Начальный список в памяти (3 записи с уникальными Id и разными ценами)
         private readonly List<Product> _products = new()
         {
             new Product { Id = 1, Name = "Laptop", Price = 1500.00m },
