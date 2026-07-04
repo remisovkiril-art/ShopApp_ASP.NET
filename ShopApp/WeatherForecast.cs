@@ -1,4 +1,4 @@
-namespace ShopApp
+namespace ShopApi
 {
     public class WeatherForecast
     {

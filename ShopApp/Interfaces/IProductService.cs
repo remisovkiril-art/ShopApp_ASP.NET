@@ -1,5 +1,5 @@
 ﻿using ShopDomain.Models;
-namespace ShopApp.Interfaces;
+namespace ShopApi.Interfaces;
 
 public interface IProductService
 {

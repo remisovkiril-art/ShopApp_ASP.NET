@@ -2,6 +2,8 @@
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
   </Folder>
-  <Project Path="ShopApp/ShopApp.csproj" />
+  <Project Path="ShopApp.Application/ShopApplication.csproj" Id="46448278-cbd4-44bc-a4a1-610664408dbe" />
+  <Project Path="ShopApp.Infrastructure/ShopInfrastructure.csproj" Id="e791a239-802f-470e-948b-3a41f4a40e15" />
+  <Project Path="ShopApp/ShopApi.csproj" />
   <Project Path="ShopDomain/ShopDomain.csproj" />
 </Solution>
