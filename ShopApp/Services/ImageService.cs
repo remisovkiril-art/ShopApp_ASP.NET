@@ -7,7 +7,7 @@ namespace ShopApi.Services;
 public class ImageService : IImageService
 {
     private readonly IWebHostEnvironment _environment;
-    private readonly string _dirname = "images";
+    private readonly string _dirname = "categories";
 
     public ImageService(IWebHostEnvironment environment)
     {
