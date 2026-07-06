@@ -45,15 +45,11 @@ public class Program
                 Title = "Магазин продуктів API Др3",
                 Version = "v1",
                 Description = "Веб-API для управління каталогом товарів"
-            });            
+            });
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "ShopApi.xml"));
         });
-
-
-
-
-        builder.Services.AddSingleton<ShopApi.homework3.Services.IProductService, ShopApi.homework3.Services.ProductService>();
-
+        //builder.Services.AddSingleton<ShopApi.homework3.Services.IProductService, ShopApi.homework3.Services.ProductService>();
+        builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddScoped<IProductService, ProductService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -72,4 +68,5 @@ public class Program
         app.Run();
     }
 }
+
 

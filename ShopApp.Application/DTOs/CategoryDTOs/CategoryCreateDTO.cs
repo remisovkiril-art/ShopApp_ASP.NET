@@ -18,6 +18,4 @@ public class CategoryCreateDTO
     public string Url { get; set; } = string.Empty;
 
     public int? ParentId { get; set; } = null;
-
-    //public List<int> Products { get; set; } = new List<int>();
 }
