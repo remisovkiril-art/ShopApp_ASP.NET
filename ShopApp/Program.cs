@@ -2,10 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using ShopApi.Interfaces;
 using ShopApi.Services;
 using ShopApplication.Interfaces.Repository;
+using ShopApplication.Interfaces.Services;
+using ShopApplication.Mapping;
 using ShopApplication.Services;
 using ShopInfrastructure.Data;
 using ShopInfrastructure.Repositories;
-using ShopApplication.Interfaces.Services;
 
 namespace ShopApi;
 
@@ -19,6 +20,11 @@ public class Program
         {
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
         });
+
+        builder.Services.AddAutoMapper(
+            _ => { },
+            typeof(CategoryProfile).Assembly
+        );
 
         builder.Services.AddControllers()
             .AddJsonOptions(options =>
@@ -48,9 +54,9 @@ public class Program
             });
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "ShopApi.xml"));
         });
+
         //builder.Services.AddSingleton<ShopApi.homework3.Services.IProductService, ShopApi.homework3.Services.ProductService>();
         builder.Services.AddScoped<IImageService, ImageService>();
-        builder.Services.AddScoped<IProductService, ProductService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
@@ -68,5 +74,6 @@ public class Program
         app.Run();
     }
 }
+
 
 

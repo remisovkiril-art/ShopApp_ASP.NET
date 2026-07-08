@@ -27,7 +27,7 @@ public class CategoryController : ControllerBase
 
         if (request.Image != null)
         {
-            imageUrl = await _imageService.SaveFileAsync(request.Image);
+            imageUrl = (await _imageService.SaveFileAsync(request.Image)) ?? string.Empty;
         }
 
         var createdDto = new CategoryCreateDTO
@@ -38,8 +38,23 @@ public class CategoryController : ControllerBase
             ParentId = request.ParentId
         };
 
-        int? id = await _categoryService.CreateCategoryAsync(createdDto);
-        return Ok($"Category created {id}");
+        var id = await _categoryService.CreateCategoryAsync(createdDto);
+        return CreatedAtAction(
+            nameof(GetCategoryById),
+            new { id },
+            new { id }
+        );
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetCategoryById(int id)
+    {
+        var category = await _categoryService.GetCategoryByIdAsync(id);
+        if (category == null)
+        {
+            return NotFound("Категория не найдена.");
+        }
+        return Ok(category);
     }
 
     [HttpGet]
@@ -49,4 +64,6 @@ public class CategoryController : ControllerBase
         return Ok(categories);
     }
 }
+
+
 

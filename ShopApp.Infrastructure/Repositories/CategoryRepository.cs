@@ -5,16 +5,29 @@ using ShopInfrastructure.Data;
 
 namespace ShopInfrastructure.Repositories;
 
-public class CategoryRepository(ShopDbContext _context) : ICategoryRepository
+public class CategoryRepository : ICategoryRepository
 {
-    public async Task<int> AddCategoryAsync(Category category)
+    private readonly ShopDbContext _context;
+
+    public CategoryRepository(ShopDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<Category>> GetAllCategoriesAsync()
+    {
+        return await _context.Categories.ToListAsync();
+    }
+
+    public async Task<Category?> GetCategoryByIdAsync(int id)
+    {
+        return await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public async Task<int?> CreateCategoryAsync(Category category)
     {
         await _context.Categories.AddAsync(category);
         await _context.SaveChangesAsync();
         return category.Id;
-    }
-    public async Task<List<Category>> GetAllCategoriesAsync()
-    {
-        return await _context.Categories.ToListAsync();
     }
 }
