@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ShopApi.Interfaces;
 using ShopApi.Requests.Categories;
 using ShopApplication.DTOs.CategoryDTOs;
@@ -39,22 +38,11 @@ public class CategoryController : ControllerBase
         };
 
         var id = await _categoryService.CreateCategoryAsync(createdDto);
+
         return CreatedAtAction(
             nameof(GetCategoryById),
             new { id },
-            new { id }
-        );
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetCategoryById(int id)
-    {
-        var category = await _categoryService.GetCategoryByIdAsync(id);
-        if (category == null)
-        {
-            return NotFound("Категория не найдена.");
-        }
-        return Ok(category);
+            new { id });
     }
 
     [HttpGet]
@@ -63,7 +51,46 @@ public class CategoryController : ControllerBase
         var categories = await _categoryService.GetAllCategoriesAsync();
         return Ok(categories);
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetCategoryById(int id)
+    {
+        var category = await _categoryService.GetCategoryByIdAsync(id);
+
+        if (category == null)
+        {
+            return NotFound("Категория не найдена.");
+        }
+
+        return Ok(category);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCategory(int id, [FromBody] CategoryUpdateDTO dto)
+    {
+        dto.Id = id;
+
+        var result = await _categoryService.UpdateCategoryAsync(dto);
+
+        if (!result)
+        {
+            return NotFound("Категория не найдена.");
+        }
+
+        return Ok();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCategory(int id)
+    {
+        var result = await _categoryService.DeleteCategoryAsync(id);
+
+        if (!result)
+        {
+            return NotFound("Категория не найдена.");
+        }
+
+        return NoContent();
+    }
 }
-
-
 
