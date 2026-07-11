@@ -17,8 +17,8 @@ public class ShopDbContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<ProductImage> ProductImages { get; set; }
+    public DbSet<User> Users { get; set; }
 
-    // Автоматически устанавливает CreatedAt и UpdatedAt перед сохранением
     public override int SaveChanges()
     {
         SetTimestamps();
@@ -54,7 +54,6 @@ public class ShopDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // --- Category ---
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasIndex(c => c.Slug).IsUnique();
@@ -65,7 +64,6 @@ public class ShopDbContext : DbContext
                   .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // --- Product ---
         modelBuilder.Entity<Product>(entity =>
         {
             entity.Property(p => p.Price)
@@ -74,16 +72,20 @@ public class ShopDbContext : DbContext
             entity.HasOne(p => p.Category)
                   .WithMany(c => c.Products)
                   .HasForeignKey(p => p.CategoryId)
-                  .OnDelete(DeleteBehavior.Restrict); // запрещаем удаление
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // --- ProductImage ---
         modelBuilder.Entity<ProductImage>(entity =>
         {
             entity.HasOne(i => i.Product)
                   .WithMany(p => p.Images)
                   .HasForeignKey(i => i.ProductId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasIndex(u => u.Email).IsUnique();
         });
     }
 }

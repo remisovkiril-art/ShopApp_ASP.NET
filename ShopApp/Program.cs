@@ -55,7 +55,6 @@ public class Program
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "ShopApi.xml"));
         });
 
-        //builder.Services.AddSingleton<ShopApi.homework3.Services.IProductService, ShopApi.homework3.Services.ProductService>();
         builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -64,6 +63,8 @@ public class Program
 
         app.UseSwagger();
         app.UseSwaggerUI();
+
+        app.UseStaticFiles();
 
         app.UseCors("AllowAll");
 
@@ -74,6 +75,7 @@ public class Program
         app.Run();
     }
 }
+
 
 
 

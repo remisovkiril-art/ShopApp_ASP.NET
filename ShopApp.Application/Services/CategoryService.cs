@@ -3,6 +3,9 @@ using ShopApplication.DTOs.CategoryDTOs;
 using ShopApplication.Interfaces.Repository;
 using ShopApplication.Interfaces.Services;
 using ShopDomain.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ShopApplication.Services;
 
@@ -11,10 +14,10 @@ public class CategoryService : ICategoryService
     private readonly ICategoryRepository _repository;
     private readonly IMapper _mapper;
 
-    public CategoryService(ICategoryRepository repository, IMapper _mapper)
+    public CategoryService(ICategoryRepository repository, IMapper mapper)
     {
         _repository = repository;
-        this._mapper = _mapper;
+        _mapper = mapper;
     }
 
     public async Task<CategoryReadDTO?> GetCategoryByIdAsync(int id)
@@ -39,9 +42,14 @@ public class CategoryService : ICategoryService
         return dtos;
     }
 
-    public Task<int?> CreateCategoryAsync(CategoryCreateDTO dto)
+    public async Task<int?> CreateCategoryAsync(CategoryCreateDTO dto)
     {
-        throw new NotImplementedException();
+        var category = _mapper.Map<Category>(dto);
+
+        category.IsActive = true;
+        category.CreatedAt = DateTime.UtcNow;
+        category.UpdatedAt = DateTime.UtcNow;
+
+        return await _repository.CreateCategoryAsync(category);
     }
 }
-
