@@ -1,4 +1,8 @@
-﻿namespace ShopApi.Middlewares;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+
+namespace ShopApi.Middlewares;
 
 public class RequestTimerMiddleware
 {
@@ -18,21 +22,18 @@ public class RequestTimerMiddleware
         // 1. Код ДО наступного компонента
         _logger.LogInformation("Початок запиту: {Path}", context.Request.Path);
 
-        // 2. Передаємо керування далі
+        // 2. Передаємо керування далі (контроллер обрабатывает и отправляет JSON пользователя)
         await _next(context);
 
-        // 3. Код ПІСЛЯ того, як відпрацював контролер
         watch.Stop();
         _logger.LogInformation("Запит завершено за {Ms} мс", watch.ElapsedMilliseconds);
-        context.Response.StatusCode = 404;
-        context.Response.ContentType = "application/json";
 
-        var response = new
-        {
-            message = "Error"
-        };
+        // var response = new
+        // {
+        //     message = "Error"
+        // };
 
-        await context.Response.WriteAsJsonAsync(response);
+        // await context.Response.WriteAsJsonAsync(response);
         return;
     }
 }

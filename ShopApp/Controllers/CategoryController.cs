@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShopApi.Interfaces;
 using ShopApi.Requests.Categories;
 using ShopApplication.DTOs.CategoryDTOs;
@@ -18,7 +19,7 @@ public class CategoryController : ControllerBase
         _categoryService = categoryService;
         _imageService = imageService;
     }
-
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateCategory([FromForm] CategoryCreateRequest request)
     {
