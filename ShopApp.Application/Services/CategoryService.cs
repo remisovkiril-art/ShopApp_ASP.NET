@@ -76,4 +76,71 @@ public class CategoryService : ICategoryService
 
         return await _repository.UpdateCategoryAsync(category);
     }
+    public async Task<List<CategoryReadDTO>> GetParentCategoriesAsync(int categoryId)
+    {
+        var allCategories = await _repository.GetAllCategoriesAsync();
+        var parents = new List<Category>();
+
+        var current = allCategories.FirstOrDefault(c => c.Id == categoryId);
+
+        while (current != null && current.ParentId != null)
+        {
+            current = allCategories.FirstOrDefault(c => c.Id == current.ParentId);
+            if (current != null)
+            {
+                parents.Add(current);
+            }
+        }
+
+        return _mapper.Map<List<CategoryReadDTO>>(parents);
+    }
+    public async Task<List<CategoryReadDTO>> GetChildCategoriesAsync(int categoryId)
+    {
+        var allCategories = await _repository.GetAllCategoriesAsync();
+        var children = new List<Category>();
+
+        void FindChildren(int parentId)
+        {
+            var directChildren = allCategories.Where(c => c.ParentId == parentId).ToList();
+            foreach (var child in directChildren)
+            {
+                children.Add(child);
+                FindChildren(child.Id);
+            }
+        }
+
+        FindChildren(categoryId);
+        return _mapper.Map<List<CategoryReadDTO>>(children);
+    }
+    public async Task<List<CategoryNodeDTO>> GetCategoryTreeAsync()
+    {
+        var allCategories = await _repository.GetAllCategoriesAsync();
+        var allNodes = allCategories.Select(c => new CategoryNodeDTO
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Slug = c.Slug,
+            ParentId = c.ParentId,
+            Children = new List<CategoryNodeDTO>()
+        }).ToList();
+
+        var rootNodes = new List<CategoryNodeDTO>();
+        foreach (var node in allNodes)
+        {
+            if (node.ParentId == null)
+            {
+                rootNodes.Add(node); 
+            }
+            else
+            {
+                var parent = allNodes.FirstOrDefault(p => p.Id == node.ParentId);
+                if (parent != null)
+                {
+                    parent.Children.Add(node);
+                }
+            }
+        }
+
+        return rootNodes;
+    }
 }

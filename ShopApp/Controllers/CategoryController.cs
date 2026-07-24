@@ -19,6 +19,7 @@ public class CategoryController : ControllerBase
         _categoryService = categoryService;
         _imageService = imageService;
     }
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateCategory([FromForm] CategoryCreateRequest request)
@@ -93,5 +94,22 @@ public class CategoryController : ControllerBase
 
         return NoContent();
     }
+    [HttpGet("{id:int}/parents")]
+    public async Task<ActionResult<List<CategoryReadDTO>>> GetParents(int id)
+    {
+        var parents = await _categoryService.GetParentCategoriesAsync(id);
+        return Ok(parents);
+    }
+    [HttpGet("{id:int}/children")]
+    public async Task<ActionResult<List<CategoryReadDTO>>> GetChildren(int id)
+    {
+        var children = await _categoryService.GetChildCategoriesAsync(id);
+        return Ok(children);
+    }
+    [HttpGet("tree")]
+    public async Task<ActionResult<List<CategoryNodeDTO>>> GetTree()
+    {
+        var tree = await _categoryService.GetCategoryTreeAsync();
+        return Ok(tree);
+    }
 }
-
