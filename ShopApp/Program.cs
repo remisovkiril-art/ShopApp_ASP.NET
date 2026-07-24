@@ -107,7 +107,7 @@ public class Program
         //--------------REPOSITORIES
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-
+        builder.Services.AddScoped<IProductRepository, ProductRepository>();
         var app = builder.Build();
         app.UseSwagger();
         app.UseSwaggerUI();

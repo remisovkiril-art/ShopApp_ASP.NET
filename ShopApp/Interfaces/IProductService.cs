@@ -1,8 +1,10 @@
-﻿using ShopDomain.Models;
-namespace ShopApi.Interfaces;
+﻿using ShopApplication.DTOs.ProductDTOs;
+
+namespace ShopApplication.Interfaces.Services;
 
 public interface IProductService
 {
-    List<Product> GetAllProducts();
-    void AddProduct(Product product);
+    Task<int> CreateProductAsync(ProductCreateDTO dto);
+    Task<List<ProductReadDTO>> GetAllProductsAsync();
+    Task<ProductReadDTO?> GetProductByIdAsync(int id);
 }
