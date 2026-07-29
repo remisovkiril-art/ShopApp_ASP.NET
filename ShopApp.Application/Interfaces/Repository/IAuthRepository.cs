@@ -9,4 +9,6 @@ public interface IAuthRepository
     Task<bool> IsExistEmailAsync(string email);
     Task SaveRefreshTokenAsync(RefreshToken refreshToken);
     Task<RefreshToken?> GetRefreshTokenAsync(string token);
+    Task<User?> GetUserByEmailAsync(string email);
 }
+

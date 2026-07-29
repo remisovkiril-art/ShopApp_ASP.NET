@@ -28,6 +28,26 @@ public class AuthController(IAuthService authService) : ControllerBase
         });
     }
 
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] UserLoginDTO dto)
+    {
+        var result = await authService.LoginAsync(dto);
+
+        if (result == null || result.User == null)
+        {
+            return Unauthorized("Неверный email или пароль.");
+        }
+
+        SetRefreshTokenCookie(result.RefreshToken!);
+
+        return Ok(new
+        {
+            user = result.User,
+            token = result.Token,
+            refreshToken = result.RefreshToken
+        });
+    }
+
     [HttpPost("refresh")]
     public async Task<IActionResult> RefreshToken()
     {

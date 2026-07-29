@@ -14,6 +14,7 @@ using ShopInfrastructure.Configuration;
 using ShopInfrastructure.Data;
 using ShopInfrastructure.Helpers;
 using ShopInfrastructure.Repositories;
+using ShopInfrastructure.Services;
 using System;
 using System.IO;
 using System.Text;
@@ -36,7 +37,7 @@ public class Program
         var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()
             ?? throw new Exception("JWT settings not configured.");
         builder.Services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-        builder.Services.AddScoped<IJWTService, ShopInfrastructure.Services.JWTService>();
+        builder.Services.AddScoped<IJWTService, JWTService>();
 
         // ================= Authentication =================
         builder.Services.AddAuthentication(options =>

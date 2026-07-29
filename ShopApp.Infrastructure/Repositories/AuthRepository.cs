@@ -39,5 +39,10 @@ public class AuthRepository : IAuthRepository
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == token && !rt.IsRevoked);
     }
+    public async Task<User?> GetUserByEmailAsync(string email)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    }
+
 }
 

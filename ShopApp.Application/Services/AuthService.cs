@@ -86,4 +86,38 @@ public class AuthService(
 
         return (newAccessToken, newRefreshTokenString);
     }
+
+    public async Task<AuthResponseDTO?> LoginAsync(UserLoginDTO dto)
+    {
+        var user = await repository.GetUserByEmailAsync(dto.Email);
+
+        if (user == null)
+            return null;
+
+        if (!hashHelper.IsValidPassword(dto.Password, user.PasswordHash))
+            return null;
+
+        var token = jwtService.GenerateAccessToken(
+            mapper.Map<UserLoginDTO>(user),
+            user.Role.ToString());
+
+        var (refreshTokenString, days) = jwtService.GenerateRefreshToken();
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            Token = refreshTokenString,
+            UserId = user.Id,
+            ExpiresAt = DateTime.UtcNow.AddDays(days),
+            IsRevoked = false
+        };
+
+        await repository.SaveRefreshTokenAsync(refreshTokenEntity);
+
+        return new AuthResponseDTO
+        {
+            User = mapper.Map<UserReadDTO>(user),
+            Token = token,
+            RefreshToken = refreshTokenString
+        };
+    }
 }
