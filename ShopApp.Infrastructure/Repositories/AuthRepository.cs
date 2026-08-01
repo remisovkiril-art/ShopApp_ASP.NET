@@ -20,12 +20,13 @@ public class AuthRepository : IAuthRepository
         return await _context.Users.AnyAsync(u => u.Email == email);
     }
 
-    public async Task<User>? RegisterUserAsync(User user, string hash)
+    public async Task<User?> RegisterUserAsync(User user, string hash)
     {
         user.PasswordHash = hash;
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
         return await _context.Users.FirstOrDefaultAsync(us => us.Email == user.Email && us.PasswordHash == user.PasswordHash);
+
     }
     public async Task SaveRefreshTokenAsync(RefreshToken refreshToken)
     {
@@ -42,6 +43,11 @@ public class AuthRepository : IAuthRepository
     public async Task<User?> GetUserByEmailAsync(string email)
     {
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    }
+    public async Task UpdateRefreshTokenAsync(RefreshToken refreshToken)
+    {
+        _context.RefreshTokens.Update(refreshToken);
+        await _context.SaveChangesAsync();
     }
 
 }

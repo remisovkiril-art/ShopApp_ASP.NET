@@ -62,7 +62,7 @@ public class AuthService(
             return (null, null);
 
         dbToken.IsRevoked = true;
-
+        await repository.UpdateRefreshTokenAsync(dbToken);
         var userLoginDto = new UserLoginDTO
         {
             Email = dbToken.User?.Email ?? string.Empty

@@ -6,8 +6,12 @@ namespace ShopApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(
+    IAuthService authService,
+    IConfiguration configuration) : ControllerBase
 {
+    private readonly IConfiguration _configuration = configuration;
+
     [HttpPost]
     public async Task<IActionResult> RegisterUser([FromBody] UserCreateDTO dto)
     {
@@ -82,7 +86,8 @@ public class AuthController(IAuthService authService) : ControllerBase
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddDays(3)
+                Expires = DateTimeOffset.UtcNow.AddDays(
+                    _configuration.GetValue<int>("Jwt:ExpiresRefreshTokenDay"))
             });
     }
 }
