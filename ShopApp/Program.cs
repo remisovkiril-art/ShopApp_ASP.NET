@@ -117,6 +117,7 @@ public class Program
         builder.Services.AddScoped<IProductService, ProductService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddSingleton<IHashHelper, HashHelper>();
 
