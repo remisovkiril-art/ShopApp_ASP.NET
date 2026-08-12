@@ -10,11 +10,16 @@ public class CategoryService : ICategoryService
 {
     private readonly ICategoryRepository _repository;
     private readonly IMapper _mapper;
+    private readonly ICachingService _cacheService;
 
-    public CategoryService(ICategoryRepository repository, IMapper mapper)
+    public CategoryService(
+        ICategoryRepository repository,
+        IMapper mapper,
+        ICachingService cacheService)
     {
         _repository = repository;
         _mapper = mapper;
+        _cacheService = cacheService;
     }
 
     public async Task<CategoryReadDTO?> GetCategoryByIdAsync(int id)
@@ -33,6 +38,13 @@ public class CategoryService : ICategoryService
 
     public async Task<List<CategoryReadDTO>?> GetAllCategoriesAsync()
     {
+        var cache = await _cacheService.GetAsync<List<CategoryReadDTO>>("Categories");
+
+        if (cache != null)
+        {
+            return cache;
+        }
+
         List<Category> categories = await _repository.GetAllCategoriesAsync();
 
         List<CategoryReadDTO>? dtos = null;
@@ -40,6 +52,8 @@ public class CategoryService : ICategoryService
         if (categories != null && categories.Count > 0)
         {
             dtos = _mapper.Map<List<CategoryReadDTO>>(categories);
+
+            await _cacheService.SetAsync("Categories", dtos, null);
         }
 
         return dtos;
@@ -53,12 +67,23 @@ public class CategoryService : ICategoryService
         category.CreatedAt = DateTime.UtcNow;
         category.UpdatedAt = DateTime.UtcNow;
 
-        return await _repository.CreateCategoryAsync(category);
+        var result = await _repository.CreateCategoryAsync(category);
+
+        await _cacheService.RemoveAsync("Categories");
+
+        return result;
     }
 
     public async Task<bool> DeleteCategoryAsync(int id)
     {
-        return await _repository.DeleteCategoryAsync(id);
+        var result = await _repository.DeleteCategoryAsync(id);
+
+        if (result)
+        {
+            await _cacheService.RemoveAsync("Categories");
+        }
+
+        return result;
     }
 
     public async Task<bool> UpdateCategoryAsync(CategoryUpdateDTO dto)
@@ -74,8 +99,16 @@ public class CategoryService : ICategoryService
         category.ParentId = dto.ParentId;
         category.UpdatedAt = DateTime.UtcNow;
 
-        return await _repository.UpdateCategoryAsync(category);
+        var result = await _repository.UpdateCategoryAsync(category);
+
+        if (result)
+        {
+            await _cacheService.RemoveAsync("Categories");
+        }
+
+        return result;
     }
+
     public async Task<List<CategoryReadDTO>> GetParentCategoriesAsync(int categoryId)
     {
         var allCategories = await _repository.GetAllCategoriesAsync();
@@ -86,6 +119,7 @@ public class CategoryService : ICategoryService
         while (current != null && current.ParentId != null)
         {
             current = allCategories.FirstOrDefault(c => c.Id == current.ParentId);
+
             if (current != null)
             {
                 parents.Add(current);
@@ -94,6 +128,7 @@ public class CategoryService : ICategoryService
 
         return _mapper.Map<List<CategoryReadDTO>>(parents);
     }
+
     public async Task<List<CategoryReadDTO>> GetChildCategoriesAsync(int categoryId)
     {
         var allCategories = await _repository.GetAllCategoriesAsync();
@@ -101,7 +136,10 @@ public class CategoryService : ICategoryService
 
         void FindChildren(int parentId)
         {
-            var directChildren = allCategories.Where(c => c.ParentId == parentId).ToList();
+            var directChildren = allCategories
+                .Where(c => c.ParentId == parentId)
+                .ToList();
+
             foreach (var child in directChildren)
             {
                 children.Add(child);
@@ -110,11 +148,14 @@ public class CategoryService : ICategoryService
         }
 
         FindChildren(categoryId);
+
         return _mapper.Map<List<CategoryReadDTO>>(children);
     }
+
     public async Task<List<CategoryNodeDTO>> GetCategoryTreeAsync()
     {
         var allCategories = await _repository.GetAllCategoriesAsync();
+
         var allNodes = allCategories.Select(c => new CategoryNodeDTO
         {
             Id = c.Id,
@@ -125,15 +166,17 @@ public class CategoryService : ICategoryService
         }).ToList();
 
         var rootNodes = new List<CategoryNodeDTO>();
+
         foreach (var node in allNodes)
         {
             if (node.ParentId == null)
             {
-                rootNodes.Add(node); 
+                rootNodes.Add(node);
             }
             else
             {
                 var parent = allNodes.FirstOrDefault(p => p.Id == node.ParentId);
+
                 if (parent != null)
                 {
                     parent.Children.Add(node);

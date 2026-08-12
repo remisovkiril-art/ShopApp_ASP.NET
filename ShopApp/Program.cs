@@ -82,7 +82,15 @@ public class Program
                       .AllowAnyHeader();
             });
         });
-
+        //builder.Services.AddCors(options =>
+        //{
+        //    options.AddPolicy("ProductionPolicy", policy =>
+        //    {
+        //        policy.WithOrigins("https://example.com", "https://www.example.com")
+        //              .WithMethods("GET", "POST", "PUT", "DELETE")
+        //              .WithHeaders("Content-Type", "Authorization");
+        //    });
+        //});
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
@@ -120,7 +128,9 @@ public class Program
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddSingleton<IHashHelper, HashHelper>();
-
+        // ================= CACHE =================
+        builder.Services.AddMemoryCache();
+        builder.Services.AddScoped<ICachingService, MemoryCachingService>();
         //--------------REPOSITORIES
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<IAuthRepository, AuthRepository>();
@@ -129,6 +139,7 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI();
         app.UseCors("AllowAll");
+        //app.UseCors("ProductionPolicy");
         app.UseAuthentication();
         app.UseAuthorization();
 
