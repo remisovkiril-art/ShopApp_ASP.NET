@@ -19,6 +19,7 @@ public class ShopDbContext : DbContext
     public DbSet<ProductImage> ProductImages { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
     public override int SaveChanges()
     {
         SetTimestamps();
@@ -53,7 +54,15 @@ public class ShopDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasOne(t => t.User)
+                  .WithMany()
+                  .HasForeignKey(t => t.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
+            entity.HasIndex(t => t.Token).IsUnique();
+        });
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasIndex(c => c.Slug).IsUnique();

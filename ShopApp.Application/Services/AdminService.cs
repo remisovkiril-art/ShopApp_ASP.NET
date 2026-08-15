@@ -3,7 +3,6 @@ using ShopApplication.DTOs.UserDTOs;
 using ShopApplication.Interfaces.Helpers;
 using ShopApplication.Interfaces.Repository;
 using ShopApplication.Interfaces.Services;
-using ShopDomain.Enums;
 using ShopDomain.Models;
 
 namespace ShopApplication.Services;
@@ -20,10 +19,16 @@ public class AdminService(
         if (isExist)
             return null;
 
+        if (dto.Role != ShopDomain.Enums.UserRole.Admin &&
+            dto.Role != ShopDomain.Enums.UserRole.Moderator)
+        {
+            return null;
+        }
+
         var user = new User
         {
             Email = dto.Email,
-            Role = UserRole.Admin,
+            Role = dto.Role,
             IsActive = true
         };
 

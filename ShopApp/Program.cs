@@ -126,6 +126,7 @@ public class Program
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IAdminService, AdminService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddSingleton<IHashHelper, HashHelper>();
         // ================= CACHE =================

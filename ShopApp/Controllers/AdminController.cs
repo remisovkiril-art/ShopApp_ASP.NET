@@ -17,7 +17,9 @@ public class AdminController(IAdminService adminService) : ControllerBase
 
         if (result == null)
         {
-            return BadRequest("Пользователь с таким email уже существует");
+            return BadRequest(
+                "Пользователь с таким email уже существует или указана недопустимая роль"
+            );
         }
 
         return Ok(result);
