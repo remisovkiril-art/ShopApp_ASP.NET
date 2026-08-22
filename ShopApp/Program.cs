@@ -15,6 +15,7 @@ using ShopInfrastructure.Data;
 using ShopInfrastructure.Helpers;
 using ShopInfrastructure.Repositories;
 using ShopInfrastructure.Services;
+using StackExchange.Redis;
 using System;
 using System.IO;
 using System.Text;
@@ -38,6 +39,10 @@ public class Program
             ?? throw new Exception("JWT settings not configured.");
         builder.Services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         builder.Services.AddScoped<IJWTService, JWTService>();
+        // ================= RabbitMQ Settings =================
+        builder.Services.Configure<RabbitMqSettings>(
+            builder.Configuration.GetSection("RabbitMq")
+        );
 
         // ================= Authentication =================
         builder.Services.AddAuthentication(options =>
@@ -119,7 +124,12 @@ public class Program
                 }
             });
         });
-
+        //======================Redis=====================
+        builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            var config = builder.Configuration.GetConnectionString("Redis");
+            return ConnectionMultiplexer.Connect(config);
+        });
 
         //--------------SERVICES-------------------
         builder.Services.AddScoped<IProductService, ProductService>();
@@ -129,9 +139,10 @@ public class Program
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddSingleton<IHashHelper, HashHelper>();
+        builder.Services.AddScoped<IQueueService, RabbitMqService>();
         // ================= CACHE =================
-        builder.Services.AddMemoryCache();
-        builder.Services.AddScoped<ICachingService, MemoryCachingService>();
+        builder.Services.AddScoped<ICachingService, RedisCachingService>();
+        //builder.Services.AddScoped<ICachingService, MemoryCachingService>();
         //--------------REPOSITORIES
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<IAuthRepository, AuthRepository>();

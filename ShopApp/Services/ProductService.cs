@@ -10,11 +10,16 @@ public class ProductService : IProductService
 {
     private readonly IProductRepository _repository;
     private readonly IMapper _mapper;
+    private readonly ICachingService _cacheService;
 
-    public ProductService(IProductRepository repository, IMapper mapper)
+    public ProductService(
+        IProductRepository repository,
+        IMapper mapper,
+        ICachingService cacheService)
     {
         _repository = repository;
         _mapper = mapper;
+        _cacheService = cacheService;
     }
 
     public async Task<int> CreateProductAsync(ProductCreateDTO dto)
@@ -34,18 +39,37 @@ public class ProductService : IProductService
             }).ToList()
         };
 
-        return await _repository.CreateProductAsync(product);
+        var result = await _repository.CreateProductAsync(product);
+
+        await _cacheService.RemoveAsync("Products");
+
+        return result;
     }
 
     public async Task<List<ProductReadDTO>> GetAllProductsAsync()
     {
+        var cache = await _cacheService.GetAsync<List<ProductReadDTO>>("Products");
+
+        if (cache != null)
+        {
+            return cache;
+        }
+
         var products = await _repository.GetAllProductsAsync();
-        return _mapper.Map<List<ProductReadDTO>>(products);
+
+        var dtos = _mapper.Map<List<ProductReadDTO>>(products);
+
+        await _cacheService.SetAsync("Products", dtos, null);
+
+        return dtos;
     }
 
     public async Task<ProductReadDTO?> GetProductByIdAsync(int id)
     {
         var product = await _repository.GetProductByIdAsync(id);
-        return product == null ? null : _mapper.Map<ProductReadDTO>(product);
+
+        return product == null
+            ? null
+            : _mapper.Map<ProductReadDTO>(product);
     }
 }

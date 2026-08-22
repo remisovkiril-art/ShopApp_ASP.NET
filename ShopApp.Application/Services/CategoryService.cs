@@ -38,12 +38,14 @@ public class CategoryService : ICategoryService
 
     public async Task<List<CategoryReadDTO>?> GetAllCategoriesAsync()
     {
+        
         var cache = await _cacheService.GetAsync<List<CategoryReadDTO>>("Categories");
 
         if (cache != null)
         {
             return cache;
         }
+        
 
         List<Category> categories = await _repository.GetAllCategoriesAsync();
 
@@ -53,7 +55,9 @@ public class CategoryService : ICategoryService
         {
             dtos = _mapper.Map<List<CategoryReadDTO>>(categories);
 
+            
             await _cacheService.SetAsync("Categories", dtos, null);
+            
         }
 
         return dtos;
