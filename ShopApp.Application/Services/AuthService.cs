@@ -15,7 +15,8 @@ public class AuthService(
     IAuthRepository repository,
     IHashHelper hashHelper,
     IJWTService jwtService,
-    IEmailService emailService) : IAuthService
+    IEmailService emailService,
+    IQueueService queueService) : IAuthService
 {
     public async Task<AuthResponseDTO?> RegisterAsync(
         UserCreateDTO dto)
@@ -52,6 +53,9 @@ public class AuthService(
 
         await repository.SaveRefreshTokenAsync(
             refreshTokenEntity);
+        await queueService.PublishAsync(
+            "Users",
+            dto);
 
         return new AuthResponseDTO
         {

@@ -20,6 +20,8 @@ public class ShopDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderDetail> OrderDetails { get; set; }
     public override int SaveChanges()
     {
         SetTimestamps();
@@ -63,6 +65,26 @@ public class ShopDbContext : DbContext
 
             entity.HasIndex(t => t.Token).IsUnique();
         });
+        modelBuilder.Entity<OrderDetail>()
+            .Property(od => od.Price)
+            .HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.User)
+            .WithMany()
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<OrderDetail>()
+            .HasOne(od => od.Order)
+            .WithMany(o => o.OrderDetails)
+            .HasForeignKey(od => od.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<OrderDetail>()
+            .HasOne(od => od.Product)
+            .WithMany()
+            .HasForeignKey(od => od.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasIndex(c => c.Slug).IsUnique();
@@ -97,4 +119,5 @@ public class ShopDbContext : DbContext
             entity.HasIndex(u => u.Email).IsUnique();
         });
     }
+
 }

@@ -140,6 +140,8 @@ public class Program
         builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddSingleton<IHashHelper, HashHelper>();
         builder.Services.AddScoped<IQueueService, RabbitMqService>();
+        //RabbitMQ background service
+        builder.Services.AddHostedService<RabbitMqReaderService>();
         // ================= CACHE =================
         builder.Services.AddScoped<ICachingService, RedisCachingService>();
         //builder.Services.AddScoped<ICachingService, MemoryCachingService>();
