@@ -12,6 +12,8 @@ namespace ShopApi.Services;
 
 public class RabbitMqReaderService : BackgroundService
 {
+    private const string QueueName = "Users";
+
     private readonly ILogger<RabbitMqReaderService> _logger;
     private readonly RabbitMqSettings _rabbitMqSettings;
 
@@ -35,71 +37,100 @@ public class RabbitMqReaderService : BackgroundService
             Port = _rabbitMqSettings.Port
         };
 
-        _connection = await factory.CreateConnectionAsync();
-        _channel = await _connection.CreateChannelAsync();
+        _connection =
+            await factory.CreateConnectionAsync(stoppingToken);
+
+        _channel =
+            await _connection.CreateChannelAsync(
+                cancellationToken: stoppingToken);
 
         await _channel.QueueDeclareAsync(
-            queue: "Users",
+            queue: QueueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null
+            arguments: null,
+            cancellationToken: stoppingToken
         );
 
-        var consumer = new AsyncEventingBasicConsumer(_channel);
+        var consumer =
+            new AsyncEventingBasicConsumer(_channel);
 
-        consumer.ReceivedAsync += async (sender, e) =>
+        consumer.ReceivedAsync += async (sender, eventArgs) =>
         {
-            var body = e.Body.ToArray();
+            try
+            {
+                var body = eventArgs.Body.ToArray();
 
-            var json = Encoding.UTF8.GetString(body);
+                var json = Encoding.UTF8.GetString(body);
 
-            var message = JsonSerializer.Deserialize<UserCreateDTO>(json);
+                var message =
+                    JsonSerializer.Deserialize<UserCreateDTO>(json);
 
-            if (message == null)
-                return;
+                if (message == null)
+                {
+                    _logger.LogWarning(
+                        "RabbitMQ received an invalid user message.");
 
-            _logger.LogInformation(
-                "RabbitMqReader Received - Email: {Email}",
-                message.Email
-            );
+                    return;
+                }
 
-            _logger.LogInformation(
-                "RabbitMqReader Received - Password: {Password}",
-                message.Password
-            );
+                _logger.LogInformation(
+                    "RabbitMqReader received user from queue {Queue}. Email: {Email}",
+                    QueueName,
+                    message.Email
+                );
 
-            await Task.CompletedTask;
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error while processing RabbitMQ message.");
+            }
         };
 
         await _channel.BasicConsumeAsync(
-            queue: "Users",
+            queue: QueueName,
             autoAck: true,
-            consumer: consumer
+            consumer: consumer,
+            cancellationToken: stoppingToken
         );
 
         _logger.LogInformation(
-            "RabbitMQ Reader started. Waiting messages..."
+            "RabbitMQ Reader started. Waiting for messages from queue: {Queue}",
+            QueueName
         );
 
-        await Task.Delay(
-            Timeout.Infinite,
-            stoppingToken
-        );
+        try
+        {
+            await Task.Delay(
+                Timeout.Infinite,
+                stoppingToken);
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     public override async Task StopAsync(
         CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "RabbitMQ Reader stopping..."
-        );
+            "RabbitMQ Reader stopping...");
 
         if (_channel != null)
-            await _channel.CloseAsync();
+        {
+            await _channel.CloseAsync(
+                cancellationToken);
+        }
 
         if (_connection != null)
-            await _connection.CloseAsync();
+        {
+            await _connection.CloseAsync(
+                cancellationToken);
+        }
 
         await base.StopAsync(cancellationToken);
     }
