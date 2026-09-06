@@ -40,7 +40,6 @@ public class ProductService : IProductService
         };
 
         var result = await _repository.CreateProductAsync(product);
-
         await _cacheService.RemoveAsync("Products");
 
         return result;
@@ -54,11 +53,9 @@ public class ProductService : IProductService
         {
             return cache;
         }
-
         var products = await _repository.GetAllProductsAsync();
 
         var dtos = _mapper.Map<List<ProductReadDTO>>(products);
-
         await _cacheService.SetAsync("Products", dtos, null);
 
         return dtos;
@@ -66,10 +63,25 @@ public class ProductService : IProductService
 
     public async Task<ProductReadDTO?> GetProductByIdAsync(int id)
     {
+        var cacheKey = $"Product:{id}";
+        var cachedProduct =
+            await _cacheService.GetAsync<ProductReadDTO>(cacheKey);
+
+        if (cachedProduct != null)
+        {
+            return cachedProduct;
+        }
         var product = await _repository.GetProductByIdAsync(id);
 
-        return product == null
-            ? null
-            : _mapper.Map<ProductReadDTO>(product);
+        if (product == null)
+        {
+            return null;
+        }
+        var dto = _mapper.Map<ProductReadDTO>(product);
+        await _cacheService.SetAsync(
+            cacheKey,
+            dto,
+            null);
+        return dto;
     }
 }
