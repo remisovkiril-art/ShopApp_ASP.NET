@@ -31,14 +31,12 @@ public class Product : BaseEntity
     public bool IsActive { get; set; } = true;
 
 
-    // FK до категорії
+
     [Required]
     [Column("category_id")]
     public int CategoryId { get; set; }
 
     [ForeignKey(nameof(CategoryId))]
     public Category Category { get; set; } = null!;
-
-    // Navigation properties
     public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
 }

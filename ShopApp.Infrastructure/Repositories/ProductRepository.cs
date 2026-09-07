@@ -25,6 +25,7 @@ public class ProductRepository : IProductRepository
     {
         return _context.Products
             .Include(product => product.Images)
+            .Where(product => product.IsActive)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -34,6 +35,18 @@ public class ProductRepository : IProductRepository
         return _context.Products
             .Include(product => product.Images)
             .AsNoTracking()
+            .FirstOrDefaultAsync(product => product.Id == id && product.IsActive);
+    }
+
+    public async Task DeleteProductAsync(int id)
+    {
+        var product = await _context.Products
             .FirstOrDefaultAsync(product => product.Id == id);
+
+        if (product != null)
+        {
+            product.IsActive = false;
+            await _context.SaveChangesAsync();
+        }
     }
 }

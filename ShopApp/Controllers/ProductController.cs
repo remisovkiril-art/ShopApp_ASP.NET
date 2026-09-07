@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using ShopApplication.Commands.Product;
+using Microsoft.AspNetCore.Mvc;
 using ShopApi.Requests.Products;
 using ShopApplication.DTOs.ProductDTOs;
+using ShopApplication.Queries.Product;
 using IImageService = ShopApi.Interfaces.IImageService;
 using IProductService = ShopApplication.Interfaces.Services.IProductService;
 
@@ -12,15 +15,18 @@ public class ProductController : ControllerBase
 {
     private readonly IProductService _productService;
     private readonly IImageService _imageService;
+    private readonly IMediator _mediator;
     private readonly int _maxImages;
 
     public ProductController(
         IProductService productService,
         IImageService imageService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IMediator mediator) 
     {
         _productService = productService;
         _imageService = imageService;
+        _mediator = mediator; 
         _maxImages = configuration.GetValue<int?>("ProductSettings:MaxImages") ?? 5;
     }
 
@@ -60,7 +66,14 @@ public class ProductController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ProductReadDTO>> GetProductById(int id)
     {
-        var product = await _productService.GetProductByIdAsync(id);
+        var product = await _mediator.Send(new GetProductByIdQuery(id));
         return product == null ? NotFound("Продукт не найден") : Ok(product);
+    }
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        await _mediator.Send(new DeleteProductCommand(id));
+
+        return NoContent();
     }
 }

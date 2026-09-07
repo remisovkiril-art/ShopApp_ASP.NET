@@ -9,6 +9,7 @@ using ShopApplication.Interfaces.Helpers;
 using ShopApplication.Interfaces.Repository;
 using ShopApplication.Interfaces.Services;
 using ShopApplication.Mapping;
+using ShopApplication.Queries.Product;
 using ShopApplication.Services;
 using ShopInfrastructure.Configuration;
 using ShopInfrastructure.Data;
@@ -76,7 +77,11 @@ public class Program
             _ => { },
             typeof(CategoryProfile).Assembly
         );
-
+        //==================MEDIATR======================
+        builder.Services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(GetProductByIdHandler).Assembly);
+        });
         // ================= CORS =================
         builder.Services.AddCors(options =>
         {
