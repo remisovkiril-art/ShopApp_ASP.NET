@@ -129,6 +129,7 @@ public class Program
                 }
             });
         });
+
         //======================Redis=====================
         builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
@@ -158,10 +159,10 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI();
         app.UseCors("AllowAll");
+        app.UseMiddleware<CancellationTokenHandleMiddlewares>();
         //app.UseCors("ProductionPolicy");
         app.UseAuthentication();
-        app.UseAuthorization();
-
+        app.UseAuthorization();       
         app.UseMiddleware<RequestTimerMiddleware>();
         app.UseStaticFiles();
         app.MapControllers();

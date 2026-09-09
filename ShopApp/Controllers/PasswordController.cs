@@ -13,11 +13,13 @@ public class PasswordController(
     [AllowAnonymous]
     [HttpPost("forgot")]
     public async Task<IActionResult> ForgotPassword(
-        [FromBody] ForgotPasswordDTO dto)
+        [FromBody] ForgotPasswordDTO dto,
+        CancellationToken cancellationToken)
     {
         var result =
             await authService.SendPasswordResetEmailAsync(
-                dto.Email);
+                dto.Email,
+                cancellationToken);
 
         if (!result)
         {
@@ -32,12 +34,14 @@ public class PasswordController(
     [AllowAnonymous]
     [HttpPost("reset")]
     public async Task<IActionResult> ResetPassword(
-        [FromBody] ResetPasswordDTO dto)
+        [FromBody] ResetPasswordDTO dto,
+        CancellationToken cancellationToken)
     {
         var result =
             await authService.ResetPasswordAsync(
                 dto.Token,
-                dto.NewPassword);
+                dto.NewPassword,
+                cancellationToken);
 
         if (!result)
         {

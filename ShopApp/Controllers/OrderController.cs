@@ -16,15 +16,19 @@ public class OrderController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDTO dto)
-
+    public async Task<IActionResult> CreateOrder(
+        [FromBody] OrderCreateDTO dto,
+        CancellationToken cancellationToken)
     {
         if (dto == null)
         {
             return BadRequest();
         }
 
-        await _queueService.PublishAsync("Orders", dto);
+        await _queueService.PublishAsync(
+            "Orders",
+            dto,
+            cancellationToken);
 
         return Ok();
     }

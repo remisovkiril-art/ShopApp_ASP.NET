@@ -19,9 +19,12 @@ public class AuthService(
     IQueueService queueService) : IAuthService
 {
     public async Task<AuthResponseDTO?> RegisterAsync(
-        UserCreateDTO dto)
+        UserCreateDTO dto,
+        CancellationToken cancellationToken)
     {
-        var isExist = await repository.IsExistEmailAsync(dto.Email);
+        var isExist = await repository.IsExistEmailAsync(
+            dto.Email,
+            cancellationToken);
 
         if (isExist)
             return null;
@@ -31,7 +34,10 @@ public class AuthService(
         var user = mapper.Map<User>(dto);
 
         var registerUser =
-            await repository.RegisterUserAsync(user, hash);
+            await repository.RegisterUserAsync(
+                user,
+                hash,
+                cancellationToken);
 
         if (registerUser == null)
             return null;
@@ -52,10 +58,13 @@ public class AuthService(
         };
 
         await repository.SaveRefreshTokenAsync(
-            refreshTokenEntity);
+            refreshTokenEntity,
+            cancellationToken);
+
         await queueService.PublishAsync(
             "Users",
-            dto);
+            dto,
+            cancellationToken);
 
         return new AuthResponseDTO
         {
@@ -66,10 +75,14 @@ public class AuthService(
     }
 
     public async Task<(string? AccessToken, string? NewRefreshToken)>
-        RefreshTokensAsync(string oldRefreshToken)
+        RefreshTokensAsync(
+            string oldRefreshToken,
+            CancellationToken cancellationToken)
     {
         var dbToken =
-            await repository.GetRefreshTokenAsync(oldRefreshToken);
+            await repository.GetRefreshTokenAsync(
+                oldRefreshToken,
+                cancellationToken);
 
         if (dbToken == null ||
             dbToken.ExpiresAt < DateTime.UtcNow)
@@ -79,7 +92,9 @@ public class AuthService(
 
         dbToken.IsRevoked = true;
 
-        await repository.UpdateRefreshTokenAsync(dbToken);
+        await repository.UpdateRefreshTokenAsync(
+            dbToken,
+            cancellationToken);
 
         var userLoginDto = new UserLoginDTO
         {
@@ -102,7 +117,8 @@ public class AuthService(
         };
 
         await repository.SaveRefreshTokenAsync(
-            newRefreshTokenEntity);
+            newRefreshTokenEntity,
+            cancellationToken);
 
         return (
             newAccessToken,
@@ -110,10 +126,13 @@ public class AuthService(
     }
 
     public async Task<AuthResponseDTO?> LoginAsync(
-        UserLoginDTO dto)
+        UserLoginDTO dto,
+        CancellationToken cancellationToken)
     {
         var user =
-            await repository.GetUserByEmailAsync(dto.Email);
+            await repository.GetUserByEmailAsync(
+                dto.Email,
+                cancellationToken);
 
         if (user == null)
             return null;
@@ -141,7 +160,8 @@ public class AuthService(
         };
 
         await repository.SaveRefreshTokenAsync(
-            refreshTokenEntity);
+            refreshTokenEntity,
+            cancellationToken);
 
         return new AuthResponseDTO
         {
@@ -152,10 +172,13 @@ public class AuthService(
     }
 
     public async Task<bool> SendPasswordResetEmailAsync(
-        string email)
+        string email,
+        CancellationToken cancellationToken)
     {
         var user =
-            await repository.GetUserByEmailAsync(email);
+            await repository.GetUserByEmailAsync(
+                email,
+                cancellationToken);
 
         if (user == null)
             return false;
@@ -181,7 +204,8 @@ public class AuthService(
         };
 
         await repository.SavePasswordResetTokenAsync(
-            resetToken);
+            resetToken,
+            cancellationToken);
 
         var resetLink =
             $"https://localhost:7100/api/v1/Password/reset?token={Uri.EscapeDataString(token)}";
@@ -195,10 +219,13 @@ public class AuthService(
 
     public async Task<bool> ResetPasswordAsync(
         string token,
-        string newPassword)
+        string newPassword,
+        CancellationToken cancellationToken)
     {
         var resetToken =
-            await repository.GetPasswordResetTokenAsync(token);
+            await repository.GetPasswordResetTokenAsync(
+                token,
+                cancellationToken);
 
         if (resetToken == null)
             return false;
@@ -226,7 +253,8 @@ public class AuthService(
         resetToken.IsUsed = true;
 
         await repository.UpdatePasswordResetTokenAsync(
-            resetToken);
+            resetToken,
+            cancellationToken);
 
         return true;
     }

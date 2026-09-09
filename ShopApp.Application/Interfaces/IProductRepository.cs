@@ -4,9 +4,18 @@ namespace ShopApplication.Interfaces.Repository;
 
 public interface IProductRepository
 {
-    Task<int> CreateProductAsync(Product product);
-    Task<List<Product>> GetAllProductsAsync();
-    Task<Product?> GetProductByIdAsync(int id);
-    Task DeleteProductAsync(int id);
-}
+    Task<int> CreateProductAsync(
+        Product product,
+        CancellationToken cancellationToken);
 
+    Task<List<Product>> GetAllProductsAsync(
+        CancellationToken cancellationToken);
+
+    Task<Product?> GetProductByIdAsync(
+        int id,
+        CancellationToken cancellationToken);
+
+    Task DeleteProductAsync(
+        int id,
+        CancellationToken cancellationToken);
+}

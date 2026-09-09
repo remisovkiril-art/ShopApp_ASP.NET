@@ -11,15 +11,18 @@ namespace ShopApi.Controllers;
 public class AdminController(IAdminService adminService) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> CreateAdmin([FromBody] AdminCreateDTO dto)
+    public async Task<IActionResult> CreateAdmin(
+        [FromBody] AdminCreateDTO dto,
+        CancellationToken cancellationToken)
     {
-        var result = await adminService.CreateAdminAsync(dto);
+        var result = await adminService.CreateAdminAsync(
+            dto,
+            cancellationToken);
 
         if (result == null)
         {
             return BadRequest(
-                "Пользователь с таким email уже существует или указана недопустимая роль"
-            );
+                "Пользователь с таким email уже существует или указана недопустимая роль");
         }
 
         return Ok(result);

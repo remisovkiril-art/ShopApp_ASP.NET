@@ -16,8 +16,13 @@ public class RabbitMqService : IQueueService
         _rabbitMqSettings = options.Value;
     }
 
-    public async Task PublishAsync<T>(string queue, T message)
+    public async Task PublishAsync<T>(
+        string queue,
+        T message,
+        CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var factory = new ConnectionFactory
         {
             HostName = _rabbitMqSettings.Host,
@@ -25,17 +30,20 @@ public class RabbitMqService : IQueueService
         };
 
         await using var connection =
-            await factory.CreateConnectionAsync();
+            await factory.CreateConnectionAsync(
+                cancellationToken);
 
         await using var channel =
-            await connection.CreateChannelAsync();
+            await connection.CreateChannelAsync(
+                cancellationToken: cancellationToken);
 
         await channel.QueueDeclareAsync(
             queue: queue,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            arguments: null
+            arguments: null,
+            cancellationToken: cancellationToken
         );
 
         var json = JsonSerializer.Serialize(message);
@@ -51,7 +59,8 @@ public class RabbitMqService : IQueueService
             routingKey: queue,
             mandatory: false,
             basicProperties: properties,
-            body: body
+            body: body,
+            cancellationToken: cancellationToken
         );
     }
 }

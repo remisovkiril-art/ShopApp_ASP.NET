@@ -12,9 +12,13 @@ public class AdminService(
     IHashHelper hashHelper,
     IMapper mapper) : IAdminService
 {
-    public async Task<UserReadDTO?> CreateAdminAsync(AdminCreateDTO dto)
+    public async Task<UserReadDTO?> CreateAdminAsync(
+        AdminCreateDTO dto,
+        CancellationToken cancellationToken)
     {
-        var isExist = await repository.IsExistEmailAsync(dto.Email);
+        var isExist = await repository.IsExistEmailAsync(
+            dto.Email,
+            cancellationToken);
 
         if (isExist)
             return null;
@@ -34,7 +38,11 @@ public class AdminService(
 
         var hash = hashHelper.Hash(dto.Password);
 
-        var createdUser = await repository.RegisterUserAsync(user, hash);
+        var createdUser =
+            await repository.RegisterUserAsync(
+                user,
+                hash,
+                cancellationToken);
 
         if (createdUser == null)
             return null;

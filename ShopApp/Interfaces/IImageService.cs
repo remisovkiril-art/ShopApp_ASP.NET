@@ -2,5 +2,7 @@
 
 public interface IImageService
 {
-    Task<string> SaveFileAsync(IFormFile file);
+    Task<string> SaveFileAsync(
+        IFormFile file,
+        CancellationToken cancellationToken);
 }

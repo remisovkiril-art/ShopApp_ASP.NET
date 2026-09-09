@@ -4,7 +4,8 @@ using ShopApplication.Interfaces.Services;
 
 namespace ShopApplication.Commands.Product;
 
-public class DeleteProductHandler : IRequestHandler<DeleteProductCommand>
+public class DeleteProductHandler
+    : IRequestHandler<DeleteProductCommand>
 {
     private readonly IProductRepository _repository;
     private readonly ICachingService _cacheService;
@@ -17,12 +18,17 @@ public class DeleteProductHandler : IRequestHandler<DeleteProductCommand>
         _cacheService = cacheService;
     }
 
-    public async Task Handle(DeleteProductCommand request, CancellationToken cancellationToken)
+    public async Task Handle(
+        DeleteProductCommand request,
+        CancellationToken cancellationToken)
     {
-        await _repository.DeleteProductAsync(request.Id);
+        await _repository.DeleteProductAsync(
+            request.Id,
+            cancellationToken);
+
         await _cacheService.RemoveAsync("Products");
-        await _cacheService.RemoveAsync($"Product:{request.Id}");
+
+        await _cacheService.RemoveAsync(
+            $"Product:{request.Id}");
     }
 }
-
-

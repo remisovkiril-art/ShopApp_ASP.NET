@@ -4,5 +4,7 @@ namespace ShopApplication.Interfaces.Services;
 
 public interface IAdminService
 {
-    Task<UserReadDTO?> CreateAdminAsync(AdminCreateDTO dto);
+    Task<UserReadDTO?> CreateAdminAsync(
+        AdminCreateDTO dto,
+        CancellationToken cancellationToken);
 }
