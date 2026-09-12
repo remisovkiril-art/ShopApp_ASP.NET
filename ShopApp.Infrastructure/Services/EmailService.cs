@@ -75,4 +75,63 @@ public class EmailService : IEmailService
 
         await smtp.DisconnectAsync(true);
     }
+
+    public async Task SendOrderEmailAsync(
+        string email,
+        string messageText)
+    {
+        var server =
+            _configuration["Smtp:Server"]
+            ?? throw new InvalidOperationException(
+                "SMTP server is not configured.");
+
+        var port =
+            int.Parse(
+                _configuration["Smtp:Port"]
+                ?? "587");
+
+        var senderEmail =
+            _configuration["Smtp:Email"]
+            ?? throw new InvalidOperationException(
+                "SMTP email is not configured.");
+
+        var password =
+            _configuration["Smtp:Password"]
+            ?? throw new InvalidOperationException(
+                "SMTP password is not configured.");
+
+        var message = new MimeMessage();
+
+        message.From.Add(
+            new MailboxAddress(
+                "Shop API",
+                senderEmail));
+
+        message.To.Add(
+            MailboxAddress.Parse(email));
+
+        message.Subject =
+            "Замовлення";
+
+        message.Body =
+            new TextPart("plain")
+            {
+                Text = messageText
+            };
+
+        using var smtp = new SmtpClient();
+
+        await smtp.ConnectAsync(
+            server,
+            port,
+            MailKit.Security.SecureSocketOptions.StartTls);
+
+        await smtp.AuthenticateAsync(
+            senderEmail,
+            password);
+
+        await smtp.SendAsync(message);
+
+        await smtp.DisconnectAsync(true);
+    }
 }

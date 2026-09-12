@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ShopApplication.Interfaces.Services;
+﻿namespace ShopApplication.Interfaces.Services;
 
 public interface IEmailService
 {
     Task SendPasswordResetEmailAsync(
         string email,
         string resetLink);
+
+    Task SendOrderEmailAsync(
+        string email,
+        string message);
 }

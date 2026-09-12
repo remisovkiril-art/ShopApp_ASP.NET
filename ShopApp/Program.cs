@@ -148,6 +148,7 @@ public class Program
         builder.Services.AddScoped<IQueueService, RabbitMqService>();
         //RabbitMQ background service
         builder.Services.AddHostedService<RabbitMqReaderService>();
+        builder.Services.AddHostedService<OrderRabbitMqReaderService>();
         // ================= CACHE =================
         builder.Services.AddScoped<ICachingService, RedisCachingService>();
         //builder.Services.AddScoped<ICachingService, MemoryCachingService>();
