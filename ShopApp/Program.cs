@@ -44,7 +44,9 @@ public class Program
         builder.Services.Configure<RabbitMqSettings>(
             builder.Configuration.GetSection("RabbitMq")
         );
-
+        builder.Services.Configure<MongoDbSettings>(
+            builder.Configuration.GetSection("MongoDb")
+        );
         // ================= Authentication =================
         builder.Services.AddAuthentication(options =>
         {
@@ -141,6 +143,7 @@ public class Program
         builder.Services.AddScoped<IProductService, ProductService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IProductFeedbackService, MongoProductFeedbackService>();
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IImageService, ImageService>();
