@@ -149,6 +149,7 @@ public class Program
         builder.Services.AddScoped<IImageService, ImageService>();
         builder.Services.AddSingleton<IHashHelper, HashHelper>();
         builder.Services.AddScoped<IQueueService, RabbitMqService>();
+        builder.Services.AddScoped<IUserService, UserService>();
         //RabbitMQ background service
         builder.Services.AddHostedService<RabbitMqReaderService>();
         builder.Services.AddHostedService<OrderRabbitMqReaderService>();
@@ -159,6 +160,7 @@ public class Program
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<IAuthRepository, AuthRepository>();
         builder.Services.AddScoped<IProductRepository, ProductRepository>();
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
         var app = builder.Build();
         app.UseSwagger();
         app.UseSwaggerUI();

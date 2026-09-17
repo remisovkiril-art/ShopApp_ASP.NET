@@ -4,7 +4,6 @@ using ShopDomain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,16 +21,21 @@ public class ShopDbContext : DbContext
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
+    public DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
+
     public override int SaveChanges()
     {
         SetTimestamps();
         return base.SaveChanges();
     }
 
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(
+        CancellationToken cancellationToken = default)
     {
         SetTimestamps();
-        return await base.SaveChangesAsync(cancellationToken);
+
+        return await base.SaveChangesAsync(
+            cancellationToken);
     }
 
     private void SetTimestamps()
@@ -56,6 +60,7 @@ public class ShopDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<PasswordResetToken>(entity =>
         {
             entity.HasOne(t => t.User)
@@ -65,9 +70,11 @@ public class ShopDbContext : DbContext
 
             entity.HasIndex(t => t.Token).IsUnique();
         });
+
         modelBuilder.Entity<OrderDetail>()
             .Property(od => od.Price)
             .HasColumnType("decimal(18,2)");
+
         modelBuilder.Entity<Order>()
             .HasOne(o => o.User)
             .WithMany()
@@ -85,6 +92,7 @@ public class ShopDbContext : DbContext
             .WithMany()
             .HasForeignKey(od => od.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasIndex(c => c.Slug).IsUnique();
@@ -117,7 +125,11 @@ public class ShopDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasIndex(u => u.Email).IsUnique();
+
+            entity.HasMany(u => u.DeliveryAddresses)
+                  .WithOne(a => a.User)
+                  .HasForeignKey(a => a.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
-
 }
