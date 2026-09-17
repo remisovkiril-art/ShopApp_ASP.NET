@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopApi.Interfaces;
 using ShopApi.Requests.Categories;
+using ShopApplication.Commands.Category;
 using ShopApplication.DTOs.CategoryDTOs;
 using ShopApplication.Interfaces.Services;
+using ShopApplication.Queries.Category;
 
 namespace ShopApi.Controllers;
 
@@ -13,13 +16,16 @@ public class CategoryController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
     private readonly IImageService _imageService;
+    private readonly IMediator _mediator;
 
     public CategoryController(
         ICategoryService categoryService,
-        IImageService imageService)
+        IImageService imageService,
+        IMediator mediator)
     {
         _categoryService = categoryService;
         _imageService = imageService;
+        _mediator = mediator;
     }
 
     [Authorize]
@@ -37,7 +43,7 @@ public class CategoryController : ControllerBase
                 cancellationToken)) ?? string.Empty;
         }
 
-        var createdDto = new CategoryCreateDTO
+        CategoryCreateDTO dto = new CategoryCreateDTO
         {
             Name = request.Name,
             Url = imageUrl,
@@ -45,8 +51,8 @@ public class CategoryController : ControllerBase
             ParentId = request.ParentId
         };
 
-        var id = await _categoryService.CreateCategoryAsync(
-            createdDto,
+        int? id = await _mediator.Send(
+            new CreateCategoryCommand(dto),
             cancellationToken);
 
         return CreatedAtAction(
@@ -59,28 +65,45 @@ public class CategoryController : ControllerBase
     public async Task<IActionResult> GetCategories(
         CancellationToken cancellationToken)
     {
-        var categories = await _categoryService
-            .GetAllCategoriesAsync(cancellationToken);
+        List<CategoryReadDTO>? categories =
+            await _categoryService.GetAllCategoriesAsync(
+                cancellationToken);
 
         return Ok(categories);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetCategoryById(
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<CategoryReadDTO>> GetCategoryById(
         int id,
         CancellationToken cancellationToken)
     {
-        var category = await _categoryService
-            .GetCategoryByIdAsync(
-                id,
-                cancellationToken);
+        CategoryReadDTO? dto = await _mediator.Send(
+            new GetCategoryByIdQuery(id),
+            cancellationToken);
 
-        if (category == null)
+        if (dto == null)
         {
-            return NotFound("Категория не найдена.");
+            return NotFound();
         }
 
-        return Ok(category);
+        return Ok(dto);
+    }
+
+    [HttpGet("{slug}")]
+    public async Task<ActionResult<CategoryReadDTO>> GetCategoryBySlug(
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        CategoryReadDTO? dto = await _mediator.Send(
+            new GetCategoryBySlugQuery(slug),
+            cancellationToken);
+
+        if (dto == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(dto);
     }
 
     [HttpPut("{id}")]
@@ -91,7 +114,7 @@ public class CategoryController : ControllerBase
     {
         dto.Id = id;
 
-        var result =
+        bool result =
             await _categoryService.UpdateCategoryAsync(
                 dto,
                 cancellationToken);
@@ -109,7 +132,7 @@ public class CategoryController : ControllerBase
         int id,
         CancellationToken cancellationToken)
     {
-        var result =
+        bool result =
             await _categoryService.DeleteCategoryAsync(
                 id,
                 cancellationToken);
@@ -127,8 +150,8 @@ public class CategoryController : ControllerBase
         int id,
         CancellationToken cancellationToken)
     {
-        var parents = await _categoryService
-            .GetParentCategoriesAsync(
+        List<CategoryReadDTO> parents =
+            await _categoryService.GetParentCategoriesAsync(
                 id,
                 cancellationToken);
 
@@ -140,8 +163,8 @@ public class CategoryController : ControllerBase
         int id,
         CancellationToken cancellationToken)
     {
-        var children = await _categoryService
-            .GetChildCategoriesAsync(
+        List<CategoryReadDTO> children =
+            await _categoryService.GetChildCategoriesAsync(
                 id,
                 cancellationToken);
 
@@ -152,8 +175,9 @@ public class CategoryController : ControllerBase
     public async Task<ActionResult<List<CategoryNodeDTO>>> GetTree(
         CancellationToken cancellationToken)
     {
-        var tree = await _categoryService
-            .GetCategoryTreeAsync(cancellationToken);
+        List<CategoryNodeDTO> tree =
+            await _categoryService.GetCategoryTreeAsync(
+                cancellationToken);
 
         return Ok(tree);
     }

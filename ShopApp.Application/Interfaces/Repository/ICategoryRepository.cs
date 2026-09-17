@@ -11,6 +11,10 @@ public interface ICategoryRepository
         int id,
         CancellationToken cancellationToken);
 
+    Task<Category?> GetCategoryBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken);
+
     Task<int?> CreateCategoryAsync(
         Category category,
         CancellationToken cancellationToken);
@@ -23,4 +27,3 @@ public interface ICategoryRepository
         Category category,
         CancellationToken cancellationToken);
 }
-

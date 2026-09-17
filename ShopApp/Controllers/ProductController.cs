@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using ShopApi.Requests.Products;
 using ShopApplication.Commands.Product;
 using ShopApplication.DTOs.ProductDTOs;
+using ShopApplication.Interfaces.Services;
 using ShopApplication.Queries.Product;
 using IImageService = ShopApi.Interfaces.IImageService;
-using IProductService = ShopApplication.Interfaces.Services.IProductService;
 
 namespace ShopApi.Controllers;
 
@@ -42,9 +42,9 @@ public class ProductController : ControllerBase
                 $"Максимальное количество изображений для продукта: {_maxImages}.");
         }
 
-        var imageUrls = new List<string>();
+        List<string> imageUrls = new List<string>();
 
-        foreach (var image in request.Images)
+        foreach (IFormFile image in request.Images)
         {
             imageUrls.Add(
                 await _imageService.SaveFileAsync(
@@ -52,16 +52,18 @@ public class ProductController : ControllerBase
                     cancellationToken));
         }
 
-        var id = await _productService.CreateProductAsync(
-            new ProductCreateDTO
-            {
-                Name = request.Name,
-                Description = request.Description,
-                Price = request.Price,
-                StockQty = request.StockQty,
-                CategoryId = request.CategoryId,
-                ImageUrls = imageUrls
-            },
+        ProductCreateDTO dto = new ProductCreateDTO
+        {
+            Name = request.Name,
+            Description = request.Description,
+            Price = request.Price,
+            StockQty = request.StockQty,
+            CategoryId = request.CategoryId,
+            ImageUrls = imageUrls
+        };
+
+        int id = await _mediator.Send(
+            new CreateProductCommand(dto),
             cancellationToken);
 
         return CreatedAtAction(
@@ -84,7 +86,7 @@ public class ProductController : ControllerBase
         int id,
         CancellationToken cancellationToken)
     {
-        var product = await _mediator.Send(
+        ProductReadDTO? product = await _mediator.Send(
             new GetProductByIdQuery(id),
             cancellationToken);
 

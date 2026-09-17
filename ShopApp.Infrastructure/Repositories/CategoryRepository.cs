@@ -26,8 +26,20 @@ public class CategoryRepository : ICategoryRepository
         CancellationToken cancellationToken)
     {
         return await _context.Categories
+            .Include(category => category.Products)
             .FirstOrDefaultAsync(
-                c => c.Id == id,
+                category => category.Id == id,
+                cancellationToken);
+    }
+
+    public async Task<Category?> GetCategoryBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Categories
+            .Include(category => category.Products)
+            .FirstOrDefaultAsync(
+                category => category.Slug == slug,
                 cancellationToken);
     }
 
@@ -49,9 +61,9 @@ public class CategoryRepository : ICategoryRepository
         int id,
         CancellationToken cancellationToken)
     {
-        var category = await _context.Categories
+        Category? category = await _context.Categories
             .FirstOrDefaultAsync(
-                c => c.Id == id,
+                category => category.Id == id,
                 cancellationToken);
 
         if (category == null)
