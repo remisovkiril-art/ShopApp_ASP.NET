@@ -18,6 +18,13 @@ public interface IAuthService
         UserLoginDTO dto,
         CancellationToken cancellationToken);
 
+    Task<AuthResponseDTO?> ExternalLoginAsync(
+        string email,
+        string name,
+        string providerId,
+        string providerName,
+        CancellationToken cancellationToken);
+
     Task<bool> SendPasswordResetEmailAsync(
         string email,
         CancellationToken cancellationToken);

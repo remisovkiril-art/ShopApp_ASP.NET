@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -32,44 +34,70 @@ public class Program
 
         builder.Services.AddDbContext<ShopDbContext>(options =>
         {
-            options.UseSqlServer(configuration.GetConnectionString("SqlServerConnection"));
+            options.UseSqlServer(
+                configuration.GetConnectionString(
+                    "SqlServerConnection"));
         });
 
         // ================= JWT Settings =================
-        var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()
-            ?? throw new Exception("JWT settings not configured.");
-        builder.Services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        var jwtSettings =
+            configuration.GetSection("Jwt").Get<JwtSettings>()
+            ?? throw new Exception(
+                "JWT settings not configured.");
+
+        builder.Services.Configure<JwtSettings>(
+            configuration.GetSection("Jwt"));
+
         builder.Services.AddScoped<IJWTService, JWTService>();
+
         // ================= RabbitMQ Settings =================
         builder.Services.Configure<RabbitMqSettings>(
-            builder.Configuration.GetSection("RabbitMq")
-        );
+            builder.Configuration.GetSection("RabbitMq"));
+
         builder.Services.Configure<MongoDbSettings>(
-            builder.Configuration.GetSection("MongoDb")
-        );
+            builder.Configuration.GetSection("MongoDb"));
+
         // ================= Authentication =================
         builder.Services.AddAuthentication(options =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultAuthenticateScheme =
+                JwtBearerDefaults.AuthenticationScheme;
+
+            options.DefaultChallengeScheme =
+                JwtBearerDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
         {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
+            options.TokenValidationParameters =
+                new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
 
-                ValidIssuer = jwtSettings.Issuer,
-                ValidAudience = jwtSettings.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(jwtSettings.Key)
-                ),
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidAudience = jwtSettings.Audience,
 
-                ClockSkew = TimeSpan.Zero
-            };
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(
+                                jwtSettings.Key)),
+
+                    ClockSkew = TimeSpan.Zero
+                };
+        })
+        .AddCookie(
+            CookieAuthenticationDefaults.AuthenticationScheme)
+        .AddGoogle(options =>
+        {
+            options.ClientId =
+                configuration[
+                    "Authentication:Google:ClientId"]!;
+            options.ClientSecret =
+                configuration[
+                    "Authentication:Google:ClientSecret"]!;
+            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         });
 
         builder.Services.AddAuthorization();
@@ -77,13 +105,15 @@ public class Program
         // ================= AutoMapper =================
         builder.Services.AddAutoMapper(
             _ => { },
-            typeof(CategoryProfile).Assembly
-        );
+            typeof(CategoryProfile).Assembly);
+
         //==================MEDIATR======================
         builder.Services.AddMediatR(cfg =>
         {
-            cfg.RegisterServicesFromAssembly(typeof(GetProductByIdHandler).Assembly);
+            cfg.RegisterServicesFromAssembly(
+                typeof(GetProductByIdHandler).Assembly);
         });
+
         // ================= CORS =================
         builder.Services.AddCors(options =>
         {
@@ -94,48 +124,51 @@ public class Program
                       .AllowAnyHeader();
             });
         });
-        //builder.Services.AddCors(options =>
-        //{
-        //    options.AddPolicy("ProductionPolicy", policy =>
-        //    {
-        //        policy.WithOrigins("https://example.com", "https://www.example.com")
-        //              .WithMethods("GET", "POST", "PUT", "DELETE")
-        //              .WithHeaders("Content-Type", "Authorization");
-        //    });
-        //});
+
         builder.Services.AddControllers();
+
         builder.Services.AddEndpointsApiExplorer();
+
         builder.Services.AddSwaggerGen(options =>
         {
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Type = SecuritySchemeType.Http,
-                Scheme = "bearer",
-                BearerFormat = "JWT",
-                Name = "Authorization",
-                In = ParameterLocation.Header,
-                Description = "Enter JWT token"
-            });
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
+            options.AddSecurityDefinition(
+                "Bearer",
+                new OpenApiSecurityScheme
                 {
-                    new OpenApiSecurityScheme
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Description = "Enter JWT token"
+                });
+
+            options.AddSecurityRequirement(
+                new OpenApiSecurityRequirement
+                {
                     {
-                        Reference = new OpenApiReference
+                        new OpenApiSecurityScheme
                         {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
+                            Reference =
+                                new OpenApiReference
+                                {
+                                    Type =
+                                        ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                                }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
         });
 
         //======================Redis=====================
         builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
-            var config = builder.Configuration.GetConnectionString("Redis");
+            var config =
+                builder.Configuration.GetConnectionString(
+                    "Redis");
+
             return ConnectionMultiplexer.Connect(config);
         });
 
@@ -150,32 +183,40 @@ public class Program
         builder.Services.AddSingleton<IHashHelper, HashHelper>();
         builder.Services.AddScoped<IQueueService, RabbitMqService>();
         builder.Services.AddScoped<IUserService, UserService>();
+
         //RabbitMQ background service
         builder.Services.AddHostedService<RabbitMqReaderService>();
         builder.Services.AddHostedService<OrderRabbitMqReaderService>();
+
         // ================= CACHE =================
         builder.Services.AddScoped<ICachingService, RedisCachingService>();
-        //builder.Services.AddScoped<ICachingService, MemoryCachingService>();
+
         //--------------REPOSITORIES
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<IAuthRepository, AuthRepository>();
         builder.Services.AddScoped<IProductRepository, ProductRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
+
         var app = builder.Build();
+
         app.UseSwagger();
         app.UseSwaggerUI();
+
         app.UseCors("AllowAll");
+
         app.UseMiddleware<CancellationTokenHandleMiddlewares>();
-        //app.UseCors("ProductionPolicy");
+
         app.UseAuthentication();
-        app.UseAuthorization();       
+        app.UseAuthorization();
+
         app.UseMiddleware<RequestTimerMiddleware>();
+
         app.UseStaticFiles();
+
         app.MapControllers();
 
         app.Run();
     }
 }
-
 
 

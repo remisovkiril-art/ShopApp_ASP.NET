@@ -171,6 +171,100 @@ public class AuthService(
         };
     }
 
+    public async Task<AuthResponseDTO?> ExternalLoginAsync(
+        string email,
+        string name,
+        string providerId,
+        string providerName,
+        CancellationToken cancellationToken)
+    {
+        var provider =
+            await repository.GetProviderByNameAsync(
+                providerName,
+                cancellationToken);
+
+        if (provider == null)
+            return null;
+
+        var user =
+            await repository.GetUserByEmailAsync(
+                email,
+                cancellationToken);
+
+        if (user == null)
+        {
+            user = new User
+            {
+                Email = email,
+                PasswordHash = string.Empty,
+                Role = UserRole.User,
+                IsActive = true,
+                IsEmailVerified = true
+            };
+
+            user = await repository.RegisterUserAsync(
+                user,
+                string.Empty,
+                cancellationToken);
+
+            if (user == null)
+                return null;
+        }
+
+        var userProvider =
+            await repository.GetUserProviderAsync(
+                user.Id,
+                provider.Id,
+                cancellationToken);
+
+        if (userProvider == null)
+        {
+            userProvider = new UserProvider
+            {
+                UserId = user.Id,
+                ProviderId = provider.Id,
+                NumberProvider = providerId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await repository.SaveUserProviderAsync(
+                userProvider,
+                cancellationToken);
+        }
+
+        var userLoginDto = new UserLoginDTO
+        {
+            Email = user.Email
+        };
+
+        var accessToken =
+            jwtService.GenerateAccessToken(
+                userLoginDto,
+                user.Role.ToString());
+
+        var (refreshTokenString, days) =
+            jwtService.GenerateRefreshToken();
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            Token = refreshTokenString,
+            UserId = user.Id,
+            ExpiresAt = DateTime.UtcNow.AddDays(days),
+            IsRevoked = false
+        };
+
+        await repository.SaveRefreshTokenAsync(
+            refreshTokenEntity,
+            cancellationToken);
+
+        return new AuthResponseDTO
+        {
+            User = mapper.Map<UserReadDTO>(user),
+            Token = accessToken,
+            RefreshToken = refreshTokenString
+        };
+    }
+
     public async Task<bool> SendPasswordResetEmailAsync(
         string email,
         CancellationToken cancellationToken)

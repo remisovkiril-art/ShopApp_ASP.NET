@@ -122,4 +122,38 @@ public class AuthRepository : IAuthRepository
         await _context.SaveChangesAsync(
             cancellationToken);
     }
+
+    public async Task<Provider?> GetProviderByNameAsync(
+        string name,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Providers
+            .FirstOrDefaultAsync(
+                p => p.Name == name,
+                cancellationToken);
+    }
+
+    public async Task<UserProvider?> GetUserProviderAsync(
+        Guid userId,
+        int providerId,
+        CancellationToken cancellationToken)
+    {
+        return await _context.UserProviders
+            .FirstOrDefaultAsync(
+                up => up.UserId == userId &&
+                      up.ProviderId == providerId,
+                cancellationToken);
+    }
+
+    public async Task SaveUserProviderAsync(
+        UserProvider userProvider,
+        CancellationToken cancellationToken)
+    {
+        await _context.UserProviders.AddAsync(
+            userProvider,
+            cancellationToken);
+
+        await _context.SaveChangesAsync(
+            cancellationToken);
+    }
 }

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using ShopDomain.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +10,10 @@ namespace ShopInfrastructure.Data;
 
 public class ShopDbContext : DbContext
 {
-    public ShopDbContext(DbContextOptions<ShopDbContext> options) : base(options) { }
+    public ShopDbContext(DbContextOptions<ShopDbContext> options)
+        : base(options)
+    {
+    }
 
     public DbSet<Category> Categories { get; set; }
     public DbSet<Product> Products { get; set; }
@@ -22,6 +24,9 @@ public class ShopDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
     public DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
+
+    public DbSet<Provider> Providers { get; set; }
+    public DbSet<UserProvider> UserProviders { get; set; }
 
     public override int SaveChanges()
     {
@@ -126,10 +131,52 @@ public class ShopDbContext : DbContext
         {
             entity.HasIndex(u => u.Email).IsUnique();
 
+            entity.Property(u => u.IsEmailVerified)
+                  .HasDefaultValue(false);
+
             entity.HasMany(u => u.DeliveryAddresses)
                   .WithOne(a => a.User)
                   .HasForeignKey(a => a.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Provider>(entity =>
+        {
+            entity.HasData(
+                new Provider
+                {
+                    Id = 1,
+                    Name = "google"
+                },
+                new Provider
+                {
+                    Id = 2,
+                    Name = "fb"
+                },
+                new Provider
+                {
+                    Id = 3,
+                    Name = "apple"
+                });
+        });
+
+        modelBuilder.Entity<UserProvider>(entity =>
+        {
+            entity.HasOne(up => up.User)
+                  .WithMany(u => u.UserProviders)
+                  .HasForeignKey(up => up.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(up => up.Provider)
+                  .WithMany(p => p.UserProviders)
+                  .HasForeignKey(up => up.ProviderId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(up => new
+            {
+                up.ProviderId,
+                up.NumberProvider
+            }).IsUnique();
         });
     }
 }

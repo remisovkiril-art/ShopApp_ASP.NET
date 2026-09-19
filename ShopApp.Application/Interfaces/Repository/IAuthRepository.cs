@@ -40,4 +40,17 @@ public interface IAuthRepository
     Task UpdatePasswordResetTokenAsync(
         PasswordResetToken token,
         CancellationToken cancellationToken);
+
+    Task<Provider?> GetProviderByNameAsync(
+        string name,
+        CancellationToken cancellationToken);
+
+    Task<UserProvider?> GetUserProviderAsync(
+        Guid userId,
+        int providerId,
+        CancellationToken cancellationToken);
+
+    Task SaveUserProviderAsync(
+        UserProvider userProvider,
+        CancellationToken cancellationToken);
 }

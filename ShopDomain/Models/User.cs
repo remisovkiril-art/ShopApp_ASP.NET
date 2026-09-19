@@ -25,6 +25,12 @@ public class User : BaseEntity
     [Column("is_active")]
     public bool IsActive { get; set; } = true;
 
+    [Column("is_email_verified")]
+    public bool IsEmailVerified { get; set; } = false;
+
     public ICollection<DeliveryAddress> DeliveryAddresses { get; set; }
         = new List<DeliveryAddress>();
+
+    public ICollection<UserProvider> UserProviders { get; set; }
+        = new List<UserProvider>();
 }

@@ -1,6 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShopApplication.DTOs.UserDTOs;
 using ShopApplication.Interfaces.Services;
+using System.Security.Claims;
 
 namespace ShopApi.Controllers;
 
@@ -68,7 +73,8 @@ public class AuthController(
                 "refreshToken",
                 out var oldRefreshToken))
         {
-            return Unauthorized("Refresh token отсутствует в куках.");
+            return Unauthorized(
+                "Refresh token отсутствует в куках.");
         }
 
         var result = await authService.RefreshTokensAsync(
@@ -88,6 +94,101 @@ public class AuthController(
             token = result.AccessToken,
             refreshToken = result.NewRefreshToken
         });
+    }
+
+    [AllowAnonymous]
+    [HttpGet("login-google")]
+    public IActionResult LoginGoogle()
+    {
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = Url.Action(nameof(ExternalResponse))
+        };
+
+        return Challenge(
+            properties,
+            GoogleDefaults.AuthenticationScheme);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("external-response")]
+    public async Task<IActionResult> ExternalResponse(
+        CancellationToken cancellationToken)
+    {
+        var result =
+            await HttpContext.AuthenticateAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(
+                "Помилка зовнішньої аутентифікації.");
+        }
+
+        var claims =
+            result.Principal?.Identities
+                .FirstOrDefault()?
+                .Claims;
+
+        var email =
+            claims?
+                .FirstOrDefault(
+                    c => c.Type == ClaimTypes.Email)?
+                .Value;
+
+        var name =
+            claims?
+                .FirstOrDefault(
+                    c => c.Type == ClaimTypes.Name)?
+                .Value;
+
+        var providerId =
+            claims?
+                .FirstOrDefault(
+                    c => c.Type == ClaimTypes.NameIdentifier)?
+                .Value;
+
+        if (string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(providerId))
+        {
+            return BadRequest(
+                "Google не повернув необхідні дані.");
+        }
+
+        var resultAuth =
+            await authService.ExternalLoginAsync(
+                email,
+                name ?? string.Empty,
+                providerId,
+                "google",
+                cancellationToken);
+
+        if (resultAuth == null ||
+            resultAuth.User == null)
+        {
+            return BadRequest(
+                "Не вдалося створити або авторизувати користувача.");
+        }
+
+        SetRefreshTokenCookie(
+            resultAuth.RefreshToken!);
+
+        return Ok(new
+        {
+            user = resultAuth.User,
+            token = resultAuth.Token,
+            refreshToken = resultAuth.RefreshToken
+        });
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        return Ok("Вихід успішний.");
     }
 
     private void SetRefreshTokenCookie(string token)
