@@ -52,7 +52,8 @@ public class AuthController(
 
         if (result == null || result.User == null)
         {
-            return Unauthorized("Неверный email или пароль.");
+            return Unauthorized(
+                "Неверный email или пароль.");
         }
 
         SetRefreshTokenCookie(result.RefreshToken!);
@@ -173,12 +174,19 @@ public class AuthController(
         SetRefreshTokenCookie(
             resultAuth.RefreshToken!);
 
-        return Ok(new
-        {
-            user = resultAuth.User,
-            token = resultAuth.Token,
-            refreshToken = resultAuth.RefreshToken
-        });
+        await HttpContext.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        var frontendUrl =
+            "http://localhost:3001/google-callback";
+
+        var redirectUrl =
+            $"{frontendUrl}" +
+            $"#token={Uri.EscapeDataString(resultAuth.Token!)}" +
+            $"&refreshToken={Uri.EscapeDataString(resultAuth.RefreshToken!)}" +
+            $"&email={Uri.EscapeDataString(resultAuth.User.Email)}";
+
+        return Redirect(redirectUrl);
     }
 
     [Authorize]
@@ -207,3 +215,4 @@ public class AuthController(
             });
     }
 }
+

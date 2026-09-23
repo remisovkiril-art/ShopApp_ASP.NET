@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopApi.Interfaces;
@@ -17,15 +18,18 @@ public class CategoryController : ControllerBase
     private readonly ICategoryService _categoryService;
     private readonly IImageService _imageService;
     private readonly IMediator _mediator;
+    private readonly IValidator<CategoryCreateDTO> _validator;
 
     public CategoryController(
         ICategoryService categoryService,
         IImageService imageService,
-        IMediator mediator)
+        IMediator mediator,
+        IValidator<CategoryCreateDTO> validator)
     {
         _categoryService = categoryService;
         _imageService = imageService;
         _mediator = mediator;
+        _validator = validator;
     }
 
     [Authorize]
@@ -50,6 +54,15 @@ public class CategoryController : ControllerBase
             Slug = request.Slug,
             ParentId = request.ParentId
         };
+
+        var result = await _validator.ValidateAsync(
+            dto,
+            cancellationToken);
+
+        if (!result.IsValid)
+        {
+            return BadRequest(result.Errors);
+        }
 
         int? id = await _mediator.Send(
             new CreateCategoryCommand(dto),

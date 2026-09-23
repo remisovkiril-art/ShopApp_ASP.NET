@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,7 +22,6 @@ using ShopInfrastructure.Repositories;
 using ShopInfrastructure.Services;
 using StackExchange.Redis;
 using System;
-using System.IO;
 using System.Text;
 
 namespace ShopApi;
@@ -40,8 +41,11 @@ public class Program
         });
 
         // ================= JWT Settings =================
+
         var jwtSettings =
-            configuration.GetSection("Jwt").Get<JwtSettings>()
+            configuration
+                .GetSection("Jwt")
+                .Get<JwtSettings>()
             ?? throw new Exception(
                 "JWT settings not configured.");
 
@@ -51,6 +55,7 @@ public class Program
         builder.Services.AddScoped<IJWTService, JWTService>();
 
         // ================= RabbitMQ Settings =================
+
         builder.Services.Configure<RabbitMqSettings>(
             builder.Configuration.GetSection("RabbitMq"));
 
@@ -58,56 +63,63 @@ public class Program
             builder.Configuration.GetSection("MongoDb"));
 
         // ================= Authentication =================
-        builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme =
-                JwtBearerDefaults.AuthenticationScheme;
 
-            options.DefaultChallengeScheme =
-                JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters =
-                new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
+        builder.Services
+            .AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme =
+                    JwtBearerDefaults.AuthenticationScheme;
 
-                    ValidIssuer = jwtSettings.Issuer,
-                    ValidAudience = jwtSettings.Audience,
+                options.DefaultChallengeScheme =
+                    JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters =
+                    new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
 
-                    IssuerSigningKey =
-                        new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(
-                                jwtSettings.Key)),
+                        ValidIssuer = jwtSettings.Issuer,
+                        ValidAudience = jwtSettings.Audience,
 
-                    ClockSkew = TimeSpan.Zero
-                };
-        })
-        .AddCookie(
-            CookieAuthenticationDefaults.AuthenticationScheme)
-        .AddGoogle(options =>
-        {
-            options.ClientId =
-                configuration[
-                    "Authentication:Google:ClientId"]!;
-            options.ClientSecret =
-                configuration[
-                    "Authentication:Google:ClientSecret"]!;
-            options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        });
+                        IssuerSigningKey =
+                            new SymmetricSecurityKey(
+                                Encoding.UTF8.GetBytes(
+                                    jwtSettings.Key)),
+
+                        ClockSkew = TimeSpan.Zero
+                    };
+            })
+            .AddCookie(
+                CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddGoogle(options =>
+            {
+                options.ClientId =
+                    configuration[
+                        "Authentication:Google:ClientId"]!;
+
+                options.ClientSecret =
+                    configuration[
+                        "Authentication:Google:ClientSecret"]!;
+
+                options.SignInScheme =
+                    CookieAuthenticationDefaults.AuthenticationScheme;
+            });
 
         builder.Services.AddAuthorization();
 
         // ================= AutoMapper =================
+
         builder.Services.AddAutoMapper(
             _ => { },
             typeof(CategoryProfile).Assembly);
 
-        //==================MEDIATR======================
+        // ================= MediatR =================
+
         builder.Services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(
@@ -115,17 +127,28 @@ public class Program
         });
 
         // ================= CORS =================
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAll", policy =>
             {
-                policy.AllowAnyOrigin()
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
+                policy
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
             });
         });
 
-        builder.Services.AddControllers();
+        // ================= Controllers + FluentValidation =================
+
+        builder.Services.AddControllers(options =>
+        {
+            options.ModelValidatorProviders.Clear();
+        });
+
+        builder.Services.AddFluentValidationAutoValidation();
+
+        // ================= Swagger =================
 
         builder.Services.AddEndpointsApiExplorer();
 
@@ -162,7 +185,8 @@ public class Program
                 });
         });
 
-        //======================Redis=====================
+        // ================= Redis =================
+
         builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             var config =
@@ -172,11 +196,16 @@ public class Program
             return ConnectionMultiplexer.Connect(config);
         });
 
-        //--------------SERVICES-------------------
+        // ================= Services =================
+
         builder.Services.AddScoped<IProductService, ProductService>();
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
-        builder.Services.AddScoped<IProductFeedbackService, MongoProductFeedbackService>();
+
+        builder.Services.AddScoped<
+            IProductFeedbackService,
+            MongoProductFeedbackService>();
+
         builder.Services.AddScoped<IAdminService, AdminService>();
         builder.Services.AddScoped<IEmailService, EmailService>();
         builder.Services.AddScoped<IImageService, ImageService>();
@@ -184,18 +213,39 @@ public class Program
         builder.Services.AddScoped<IQueueService, RabbitMqService>();
         builder.Services.AddScoped<IUserService, UserService>();
 
-        //RabbitMQ background service
+        // ================= Validators =================
+
+        builder.Services.AddValidatorsFromAssemblyContaining<
+            ShopApplication.Validators.Category.CategoryCreateValidator>();
+
+        // ================= RabbitMQ background services =================
+
         builder.Services.AddHostedService<RabbitMqReaderService>();
         builder.Services.AddHostedService<OrderRabbitMqReaderService>();
 
-        // ================= CACHE =================
-        builder.Services.AddScoped<ICachingService, RedisCachingService>();
+        // ================= Cache =================
 
-        //--------------REPOSITORIES
-        builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-        builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-        builder.Services.AddScoped<IProductRepository, ProductRepository>();
-        builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<
+            ICachingService,
+            RedisCachingService>();
+
+        // ================= Repositories =================
+
+        builder.Services.AddScoped<
+            ICategoryRepository,
+            CategoryRepository>();
+
+        builder.Services.AddScoped<
+            IAuthRepository,
+            AuthRepository>();
+
+        builder.Services.AddScoped<
+            IProductRepository,
+            ProductRepository>();
+
+        builder.Services.AddScoped<
+            IUserRepository,
+            UserRepository>();
 
         var app = builder.Build();
 
@@ -218,5 +268,4 @@ public class Program
         app.Run();
     }
 }
-
 
