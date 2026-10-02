@@ -11,4 +11,7 @@ public interface IUserRepository
     Task<List<DeliveryAddress>> GetDeliveryAddressesAsync(
         Guid userId,
         CancellationToken cancellationToken);
+
+    Task<List<User>> GetAllUsersAsync(
+        CancellationToken cancellationToken);
 }

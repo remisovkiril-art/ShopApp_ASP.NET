@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShopApi.Exceptions;
 using ShopApplication.DTOs.UserDTOs;
 using ShopApplication.Interfaces.Services;
 using System.Security.Claims;
@@ -13,15 +15,27 @@ namespace ShopApi.Controllers;
 [Route("api/v1/[controller]")]
 public class AuthController(
     IAuthService authService,
-    IConfiguration configuration) : ControllerBase
+    IConfiguration configuration,
+    IValidator<UserCreateDTO> validator) : ControllerBase
 {
     private readonly IConfiguration _configuration = configuration;
+    private readonly IValidator<UserCreateDTO> _validator = validator;
 
     [HttpPost]
     public async Task<IActionResult> RegisterUser(
         [FromBody] UserCreateDTO dto,
         CancellationToken cancellationToken)
     {
+        var validationResult = await _validator.ValidateAsync(
+            dto,
+            cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationAppException(
+                validationResult.Errors);
+        }
+
         var result = await authService.RegisterAsync(
             dto,
             cancellationToken);
@@ -215,4 +229,3 @@ public class AuthController(
             });
     }
 }
-

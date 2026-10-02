@@ -12,4 +12,7 @@ public interface IUserService
     Task<List<DeliveryAddressReadDTO>> GetDeliveryAddressesAsync(
         Guid userId,
         CancellationToken cancellationToken);
+
+    Task<List<UserReadDTO>> GetAllUsersAsync(
+        CancellationToken cancellationToken);
 }

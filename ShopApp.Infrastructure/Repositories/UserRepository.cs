@@ -36,4 +36,11 @@ public class UserRepository : IUserRepository
             .Where(a => a.UserId == userId)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<User>> GetAllUsersAsync(
+        CancellationToken cancellationToken)
+    {
+        return await _context.Users
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -36,4 +36,13 @@ public class UserService(
 
         return mapper.Map<List<DeliveryAddressReadDTO>>(addresses);
     }
+
+    public async Task<List<UserReadDTO>> GetAllUsersAsync(
+        CancellationToken cancellationToken)
+    {
+        var users = await repository.GetAllUsersAsync(
+            cancellationToken);
+
+        return mapper.Map<List<UserReadDTO>>(users);
+    }
 }

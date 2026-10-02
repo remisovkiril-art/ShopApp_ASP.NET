@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Polly;
+using ShopApi.Exceptions;
 using ShopApi.Interfaces;
 using ShopApi.Middlewares;
 using ShopApi.Services;
@@ -148,6 +150,12 @@ public class Program
 
         builder.Services.AddFluentValidationAutoValidation();
 
+        // ================= Exception Handler =================
+
+        builder.Services.AddProblemDetails();
+
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
         // ================= Swagger =================
 
         builder.Services.AddEndpointsApiExplorer();
@@ -213,6 +221,15 @@ public class Program
         builder.Services.AddScoped<IQueueService, RabbitMqService>();
         builder.Services.AddScoped<IUserService, UserService>();
 
+        // ================= Currency =================
+
+        builder.Services
+            .AddHttpClient<ICurrencyService, CurrencyService>()
+            .AddPolicyHandler(
+                PollyHelper.GetRetryPolicy())
+            .AddPolicyHandler(
+                PollyHelper.GetCircuitBreakerPolicy());
+
         // ================= Validators =================
 
         builder.Services.AddValidatorsFromAssemblyContaining<
@@ -254,6 +271,10 @@ public class Program
 
         app.UseCors("AllowAll");
 
+        // ================= Global Exception Handler =================
+
+        app.UseExceptionHandler();
+
         app.UseMiddleware<CancellationTokenHandleMiddlewares>();
 
         app.UseAuthentication();
@@ -268,4 +289,3 @@ public class Program
         app.Run();
     }
 }
-

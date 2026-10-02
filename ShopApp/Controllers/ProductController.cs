@@ -1,5 +1,7 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using ShopApi.Exceptions;
 using ShopApi.Requests.Products;
 using ShopApplication.Commands.Product;
 using ShopApplication.DTOs.ProductDTOs;
@@ -16,17 +18,20 @@ public class ProductController : ControllerBase
     private readonly IProductService _productService;
     private readonly IImageService _imageService;
     private readonly IMediator _mediator;
+    private readonly IValidator<ProductCreateDTO> _validator;
     private readonly int _maxImages;
 
     public ProductController(
         IProductService productService,
         IImageService imageService,
         IConfiguration configuration,
-        IMediator mediator)
+        IMediator mediator,
+        IValidator<ProductCreateDTO> validator)
     {
         _productService = productService;
         _imageService = imageService;
         _mediator = mediator;
+        _validator = validator;
         _maxImages = configuration.GetValue<int?>(
             "ProductSettings:MaxImages") ?? 5;
     }
@@ -42,6 +47,26 @@ public class ProductController : ControllerBase
                 $"Максимальное количество изображений для продукта: {_maxImages}.");
         }
 
+        ProductCreateDTO dto = new ProductCreateDTO
+        {
+            Name = request.Name,
+            Description = request.Description,
+            Price = request.Price,
+            StockQty = request.StockQty,
+            CategoryId = request.CategoryId,
+            ImageUrls = new List<string>()
+        };
+
+        var validationResult = await _validator.ValidateAsync(
+            dto,
+            cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationAppException(
+                validationResult.Errors);
+        }
+
         List<string> imageUrls = new List<string>();
 
         foreach (IFormFile image in request.Images)
@@ -52,15 +77,7 @@ public class ProductController : ControllerBase
                     cancellationToken));
         }
 
-        ProductCreateDTO dto = new ProductCreateDTO
-        {
-            Name = request.Name,
-            Description = request.Description,
-            Price = request.Price,
-            StockQty = request.StockQty,
-            CategoryId = request.CategoryId,
-            ImageUrls = imageUrls
-        };
+        dto.ImageUrls = imageUrls;
 
         int id = await _mediator.Send(
             new CreateProductCommand(dto),

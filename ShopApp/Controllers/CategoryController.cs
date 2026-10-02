@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShopApi.Exceptions;
 using ShopApi.Interfaces;
 using ShopApi.Requests.Categories;
 using ShopApplication.Commands.Category;
@@ -61,7 +62,7 @@ public class CategoryController : ControllerBase
 
         if (!result.IsValid)
         {
-            return BadRequest(result.Errors);
+            throw new ValidationAppException(result.Errors);
         }
 
         int? id = await _mediator.Send(
@@ -96,7 +97,8 @@ public class CategoryController : ControllerBase
 
         if (dto == null)
         {
-            return NotFound();
+            throw new NotFoundException(
+                $"Категория с ID {id} не найдена.");
         }
 
         return Ok(dto);
@@ -113,7 +115,8 @@ public class CategoryController : ControllerBase
 
         if (dto == null)
         {
-            return NotFound();
+            throw new NotFoundException(
+                $"Категория со slug '{slug}' не найдена.");
         }
 
         return Ok(dto);
@@ -134,7 +137,8 @@ public class CategoryController : ControllerBase
 
         if (!result)
         {
-            return NotFound("Категория не найдена.");
+            throw new NotFoundException(
+                "Категория не найдена.");
         }
 
         return Ok();
@@ -152,7 +156,8 @@ public class CategoryController : ControllerBase
 
         if (!result)
         {
-            return NotFound("Категория не найдена.");
+            throw new NotFoundException(
+                "Категория не найдена.");
         }
 
         return NoContent();
