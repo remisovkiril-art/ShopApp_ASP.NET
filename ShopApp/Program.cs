@@ -1,5 +1,4 @@
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -147,8 +146,6 @@ public class Program
         {
             options.ModelValidatorProviders.Clear();
         });
-
-        builder.Services.AddFluentValidationAutoValidation();
 
         // ================= Exception Handler =================
 
